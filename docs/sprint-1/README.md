@@ -47,7 +47,7 @@ Still open: a **native (Android/iOS) dev build** has not been compiled, and the 
 
 | # | Criterion | Status | Evidence |
 |---|---|---|---|
-| 1 | Boots on Web + Android/iOS dev build | Web ✅ · Native ⏳ | Web boots against local and hosted backends; `expo-doctor` 21/21; native build not yet compiled |
+| 1 | Boots on Web + Android/iOS dev build | Web ✅ deployed · Native ⏳ | Live at https://carvele.github.io/bacalsys/ (CI: verify → build → bundle secret guard → Pages); native build not yet compiled |
 | 2 | Supabase environment runs migrations reproducibly | ✅ (hosted) · local ⏳ | 001–007 applied cleanly to hosted; offline harness rebuilds from scratch every run; local `supabase start` needs Docker |
 | 3 | `app_private` exists, not exposed | ✅ | test 001 #1–4 on real Supabase |
 | 4 | Default function EXECUTE revoked | ✅ | test 001 #6–7 on real Supabase (ADR-002) |
@@ -83,6 +83,25 @@ untouched). Every disallowed *write* or *privileged call* fails with **`42501 pe
 Advisor items accepted as-is:
 - **"SECURITY DEFINER callable by authenticated"** on the four `public.*` RPCs is the baseline's wrapper pattern. Each wrapper checks `has_permission()` before delegating.
 - **Leaked-password protection** and **MFA options** are Auth settings, not schema. See below.
+
+## Web build & deployment
+
+- **Live:** https://carvele.github.io/bacalsys/ (public repo `carvele/bacalsys`, GitHub Pages).
+- **Pipeline** (`.github/workflows/web.yml`): on every push to `main`, run typecheck, lint, Jest and the pgTAP rebuild;
+  only then run `npm run build:web:pages` and deploy. Pull requests run verification only.
+- **Build** (`scripts/web/build.mjs`): exports with `.env.production` (URL + publishable key only), then
+  `scripts/web/check-bundle.mjs` fails the build on secret keys, non-anon JWTs, test credentials, or the wrong backend.
+  A planted `sb_secret_` was confirmed to fail it.
+- **Sub-path hosting:** `EXPO_BASE_URL=/bacalsys` (via `app.config.js`), `.nojekyll` (keeps `_expo/`), `404.html` SPA fallback.
+  `vercel.json` and `public/_redirects` are included for root-path hosts.
+- **Bug found by the production smoke test:** NetInfo's web reachability probes `HEAD /` on the page origin and treats
+  anything but 200 as offline. Under `/bacalsys/` the origin root is a 404, so the app would have paused all queries after
+  sign-in. Web reachability now probes Supabase `/auth/v1/health` instead (`src/lib/netinfo-config.ts`, 4 Jest tests;
+  cross-origin 200 verified from the browser).
+- **Known Pages limitation:** deep-linked URLs (e.g. `/bacalsys/register`) load correctly but carry HTTP status 404,
+  because Pages serves the SPA through `404.html`. It's harmless for users.
+- **Not published:** the `LICENSE` from the Expo template (copyright 650 Industries) was removed rather than republished
+  under your name. Choosing a license is the owner's call.
 
 ## Hosted dev environment
 
@@ -121,6 +140,8 @@ Advisor items accepted as-is:
 - **Local Docker stack** never run on this machine: virtualization is disabled in firmware and WSL isn't installed.
 - **Hosted dev Auth:** consider enabling leaked-password protection (Pro-plan feature) and re-enabling TOTP.
 - Not in Sprint 1 scope: reject/suspend actions, InviteClaimScreen, invitation management UI, coach visibility helpers (Sprint 2).
+- CI annotations: `actions/checkout`, `setup-node`, `upload-pages-artifact` and `deploy-pages` v4 target the deprecated Node 20 runtime; bump them to their current majors.
+- Supabase Auth redirect list: `config.toml` now includes the Pages URL but hasn't been pushed to `bacalsys-dev`. It's only needed once e-mail links (confirmation or reset) are enabled.
 - Unused template packages (`@expo/ui`, `expo-glass-effect`, `expo-symbols`, `expo-image`, `expo-device`, `expo-web-browser`).
 
 ## Re-running verification

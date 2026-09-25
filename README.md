@@ -4,6 +4,7 @@ Training and coaching platform for the Bataan calisthenics community. One Expo
 (SDK 57) codebase serves Android, iOS and Web, backed by Supabase (Postgres, Auth, RLS).
 
 - **Baseline:** BaCalSys Implementation Roadmap v1.2 (frozen). Deviations are recorded as ADRs in [`docs/adr/`](docs/adr).
+- **Live web build:** https://carvele.github.io/bacalsys/ (deployed from `main` by `.github/workflows/web.yml`).
 - **Current state:** Sprint 1, walking skeleton. See [`docs/sprint-1/README.md`](docs/sprint-1/README.md).
 
 ## Prerequisites
@@ -38,6 +39,8 @@ Local seed President (development only): `president@bacalsys.local` / `BaCalSys-
 | `npm run db:types` | Regenerate `src/types/database.ts` from the local schema |
 | `npm run e2e:skeleton` | Live walking-skeleton check through Auth + PostgREST (local stack) |
 | `npm run e2e:skeleton:hosted` | Same check against the hosted dev project (needs git-ignored `.env.hosted.local`) |
+| `npm run build:web` / `build:web:pages` | Production web export (root path / GitHub Pages sub-path) + bundle secret check |
+| `npm run serve:web` | Serve `dist/` locally with SPA fallback |
 | `npm run verify` | typecheck + lint + Jest + db:verify |
 
 ## Layout
