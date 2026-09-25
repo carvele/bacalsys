@@ -1,6 +1,7 @@
 # ADR-001: Expo Router version pin and route root directory
 
-- **Status**: Proposed — awaiting product-owner acceptance (already implemented because it blocked Sprint 1; revert path documented below)
+- **Status**: Accepted
+- **Accepted**: 2026-09-25 by the product owner (Sprint 1 final acceptance review)
 - **Date**: 2026-09-25
 - **Sprint**: 1 (Task 1.1)
 - **Classification**: ADR (baseline text is internally inconsistent; resolution chosen below)

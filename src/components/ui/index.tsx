@@ -1,3 +1,4 @@
+import { Link, type Href } from 'expo-router';
 import { forwardRef, type ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -109,6 +110,21 @@ export const TextField = forwardRef<TextInput, TextInputProps & { label: string;
     );
   },
 );
+
+/**
+ * Inline navigation link. Expo Router's <Link> is not a React Native core
+ * component, so NativeWind drops a className placed on it on iOS/Android (it
+ * only worked on web). Style a Pressable/Text child through asChild instead.
+ */
+export function TextLink({ href, children }: { href: Href; children: string }) {
+  return (
+    <Link href={href} asChild>
+      <Pressable accessibilityRole="link" hitSlop={12}>
+        <Text className="font-semibold text-brand">{children}</Text>
+      </Pressable>
+    </Link>
+  );
+}
 
 export function Notice({ tone, children }: { tone: 'danger' | 'success' | 'warning'; children: ReactNode }) {
   const styles = {

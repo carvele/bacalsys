@@ -1,8 +1,8 @@
-import { Link, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Text, View, type TextInput } from 'react-native';
 
-import { Button, Heading, Notice, Screen, TextField } from '@/components/ui';
+import { Button, Heading, Notice, Screen, TextField, TextLink } from '@/components/ui';
 import { describeError } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
 
@@ -100,9 +100,7 @@ export default function RegisterScreen() {
         </View>
         <View className="mt-6 flex-row justify-center gap-1">
           <Text className="text-ink-muted">Already a member?</Text>
-          <Link href="/login" className="font-semibold text-brand">
-            Sign in
-          </Link>
+          <TextLink href="/login">Sign in</TextLink>
         </View>
       </View>
     </Screen>

@@ -1,6 +1,7 @@
 # ADR-002: Global default revocation of function EXECUTE from PUBLIC
 
-- **Status**: Proposed — awaiting product-owner acceptance (already implemented because it blocked Sprint 1; revert path documented below)
+- **Status**: Accepted
+- **Accepted**: 2026-09-25 by the product owner (Sprint 1 final acceptance review)
 - **Date**: 2026-09-25
 - **Sprint**: 1 (Task 1.4, DoD #4)
 - **Classification**: ADR. The baseline's own SQL does not meet the baseline's stated

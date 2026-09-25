@@ -18,7 +18,7 @@
  * project URL (explicit opt-in). The hosted President is bootstrapped once with
  *   node --env-file=.env.hosted.local scripts/e2e/walking-skeleton.mjs --bootstrap-president
  * which generates a random password and writes it ONLY to that env file; an
- * operator then promotes the account (see docs/sprint-1/README.md).
+ * operator then promotes the account (see docs/sprints/sprint-01-foundations/STATUS.md).
  *
  * Each run creates uniquely named throwaway members with random passwords.
  */

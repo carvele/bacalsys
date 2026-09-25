@@ -50,4 +50,4 @@ Docs: https://docs.expo.dev/eas/index.md
 - **Verify before declaring done:** `npm run verify` (typecheck + lint + Jest + offline pgTAP rebuild).
   With Docker available, also `npm run db:test` and `npm run e2e:skeleton`.
 - **Client route guards are UX only.** Authorization lives in RLS and `app_private.has_permission()`.
-- Sprint status and DoD evidence: `docs/sprint-1/README.md`.
+- Sprint status, acceptance and findings: `docs/sprints/<sprint>/` (STATUS.md, ACCEPTANCE.md, findings/).

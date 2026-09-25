@@ -18,8 +18,8 @@ jobs:
     name: Typecheck, lint, unit + database tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -43,8 +43,8 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -52,8 +52,10 @@ jobs:
       # Exports with .env.production (public values only), checks the bundle for
       # secrets / wrong backend, and adds .nojekyll + 404.html.
       - run: npm run build:web:pages
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
+          # v4+ drops dotfiles by default; keep dist/.nojekyll so the artifact matches the build.
+          include-hidden-files: true
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

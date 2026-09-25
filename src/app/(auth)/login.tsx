@@ -1,8 +1,7 @@
-import { Link } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Text, View, type TextInput } from 'react-native';
 
-import { Button, Heading, Notice, Screen, TextField } from '@/components/ui';
+import { Button, Heading, Notice, Screen, TextField, TextLink } from '@/components/ui';
 import { describeError } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
 
@@ -60,9 +59,7 @@ export default function LoginScreen() {
         </View>
         <View className="mt-6 flex-row justify-center gap-1">
           <Text className="text-ink-muted">New to the club?</Text>
-          <Link href="/register" className="font-semibold text-brand">
-            Create an account
-          </Link>
+          <TextLink href="/register">Create an account</TextLink>
         </View>
       </View>
     </Screen>

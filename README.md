@@ -5,7 +5,7 @@ Training and coaching platform for the Bataan calisthenics community. One Expo
 
 - **Baseline:** BaCalSys Implementation Roadmap v1.2 (frozen). Deviations are recorded as ADRs in [`docs/adr/`](docs/adr).
 - **Live web build:** https://carvele.github.io/bacalsys/ (deployed from `main` by `.github/workflows/web.yml`).
-- **Current state:** Sprint 1, walking skeleton. See [`docs/sprint-1/README.md`](docs/sprint-1/README.md).
+- **Current state:** Sprint 1, walking skeleton. See [`docs/sprints/sprint-01-foundations/STATUS.md`](docs/sprints/sprint-01-foundations/STATUS.md).
 
 ## Prerequisites
 
