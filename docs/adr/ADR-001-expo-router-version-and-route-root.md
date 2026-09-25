@@ -1,6 +1,6 @@
 # ADR-001: Expo Router version pin and route root directory
 
-- **Status**: Accepted (pending product-owner acknowledgement)
+- **Status**: Proposed — awaiting product-owner acceptance (already implemented because it blocked Sprint 1; revert path documented below)
 - **Date**: 2026-09-25
 - **Sprint**: 1 (Task 1.1)
 - **Classification**: ADR (baseline text is internally inconsistent; resolution chosen below)
@@ -39,3 +39,8 @@ In addition, the roadmap's Sprint 1 task list writes route paths as
   `app_private` functions.
 - Future roadmap references to "Expo Router v4" should be read as "the Expo Router
   release bundled with the pinned Expo SDK".
+
+## Rollback / reversal
+
+- **Route root:** move `src/app/` to `app/` and update the `@/*` path alias in `tsconfig.json`. Route groups and URLs are unchanged.
+- **Router version:** there is no supported way to run Expo Router v4 on SDK 57. Honoring "v4" literally means downgrading the whole stack to SDK 52, which is a separate ADR.

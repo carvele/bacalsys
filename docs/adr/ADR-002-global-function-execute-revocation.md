@@ -1,6 +1,6 @@
 # ADR-002: Global default revocation of function EXECUTE from PUBLIC
 
-- **Status**: Accepted (pending product-owner acknowledgement)
+- **Status**: Proposed — awaiting product-owner acceptance (already implemented because it blocked Sprint 1; revert path documented below)
 - **Date**: 2026-09-25
 - **Sprint**: 1 (Task 1.4, DoD #4)
 - **Classification**: ADR. The baseline's own SQL does not meet the baseline's stated
@@ -56,3 +56,9 @@ Every intended RPC continues to be granted explicitly, as the baseline already r
   `extensions` schema to the roles they impersonate. That grant sits inside the test
   transaction and is rolled back.
 - No change to product behavior, the data model, or the RPC surface.
+
+## Rollback / reversal
+
+A new forward migration running `ALTER DEFAULT PRIVILEGES GRANT EXECUTE ON FUNCTIONS TO PUBLIC;` restores
+PostgreSQL's default for functions created afterwards. Existing functions keep their explicit grants.
+Rolling back re-opens the gap that `001_security_baseline.test.sql` tests 6–7 detect, so those tests fail by design.

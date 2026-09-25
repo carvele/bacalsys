@@ -99,8 +99,8 @@ Advisor items accepted as-is:
 
 ## ADRs raised
 
-- **ADR-001**: The roadmap's "Expo Router v4" is incompatible with SDK 57. Resolved to the SDK-57-bundled router, with routes under `src/app/`.
-- **ADR-002**: The schema-scoped default-privilege revoke leaves PUBLIC EXECUTE in place. Added a global revoke. Confirmed on real Supabase (test 001 #6–7).
+- **ADR-001** (Proposed, awaiting acceptance): The roadmap's "Expo Router v4" is incompatible with SDK 57. Resolved to the SDK-57-bundled router, with routes under `src/app/`.
+- **ADR-002** (Proposed, awaiting acceptance): The schema-scoped default-privilege revoke leaves PUBLIC EXECUTE in place. Added a global revoke. Confirmed on real Supabase (test 001 #6–7).
 
 ## Backlog refinements (no architecture or product-behavior change)
 
