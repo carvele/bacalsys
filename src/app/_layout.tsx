@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { CenteredSpinner } from '@/components/ui';
-import { hasPermission } from '@/features/auth/access';
+import { hasPermission, OFFICER_PERMISSIONS } from '@/features/auth/access';
 import { useAuth, useAuthBootstrap } from '@/features/auth/use-auth';
 import { queryClient, wireQueryLifecycle } from '@/lib/query-client';
 
@@ -31,9 +31,12 @@ export default function RootLayout() {
  * route. This is a UX gate only: RLS and the app_private checks enforce
  * authorization on the server regardless of what the client renders.
  *
- *   signed-out / pending / error → (auth)   login, register, pending-approval
- *   active                       → (athlete) home
- *   active + members:approve     → (officer) member approvals
+ *   signed-out / pending / error → (auth)    login, register, pending-approval
+ *   active                       → (athlete) home, exercise library
+ *   active + an officer tool     → (officer) member approvals, coach assignment,
+ *                                            exercise approvals (each screen also
+ *                                            checks its own permission)
+ *   active + Coach position      → (coach)   my athletes
  */
 function RootNavigator() {
   useAuthBootstrap();
@@ -46,14 +49,18 @@ function RootNavigator() {
   if (route === 'loading') return <CenteredSpinner />;
 
   const isActive = route === 'active';
-  const canReviewMembers = isActive && hasPermission(access, 'members:approve');
+  const hasOfficerTools = isActive && OFFICER_PERMISSIONS.some((p) => hasPermission(access, p));
+  const isCoach = isActive && (access?.positions.includes('Coach') ?? false);
 
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0B0F14' } }}>
       <Stack.Protected guard={isActive}>
         <Stack.Screen name="(athlete)" />
-        <Stack.Protected guard={canReviewMembers}>
+        <Stack.Protected guard={hasOfficerTools}>
           <Stack.Screen name="(officer)" />
+        </Stack.Protected>
+        <Stack.Protected guard={isCoach}>
+          <Stack.Screen name="(coach)" />
         </Stack.Protected>
       </Stack.Protected>
       <Stack.Protected guard={!isActive}>

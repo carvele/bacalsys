@@ -10,7 +10,7 @@ CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 -- ADR-002: let impersonated roles call pgTAP; rolled back with the test.
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA extensions TO anon, authenticated;
 
-SELECT plan(19);
+SELECT plan(24);
 
 -- Helper view: position → sorted permission array (C collation for stable order).
 CREATE TEMP VIEW position_matrix AS
@@ -37,25 +37,27 @@ SELECT is(
 );
 SELECT is(
   (SELECT perms FROM position_matrix WHERE position = 'Leader'),
-  ARRAY['members:view_all', 'training:view_org'],
-  'Leader: member directory + organization-wide training visibility only'
+  ARRAY['members:view_all', 'training:view_org', 'workout:assign'],
+  'Leader: member directory + organization-wide training visibility + workout assignment (D1)'
 );
 SELECT is(
   (SELECT perms FROM position_matrix WHERE position = 'Coach'),
-  ARRAY['members:view_all', 'skills:verify'],
-  'Coach: member directory + skill verification (athlete scope comes from coach_assignments, Sprint 2)'
+  ARRAY['exercises:approve', 'members:view_all', 'skills:verify', 'workout:assign'],
+  'Coach: member directory, skill verification, exercise approval (D4), workout assignment (D1); athlete scope comes from coach_assignments'
 );
 SELECT is(
   (SELECT perms FROM position_matrix WHERE position = 'Vice President'),
-  ARRAY['audit:view', 'exercises:review', 'members:approve', 'members:invite', 'members:preassign_position',
-        'members:view_all', 'positions:assign', 'skills:verify', 'training:view_org'],
-  'Vice President: executive governance set'
+  ARRAY['audit:view', 'coaches:assign', 'exercises:approve', 'members:approve', 'members:invite',
+        'members:preassign_position', 'members:view_all', 'positions:assign', 'skills:verify',
+        'training:view_org', 'workout:assign'],
+  'Vice President: executive governance set (no President-only governance, D3)'
 );
 SELECT is(
   (SELECT perms FROM position_matrix WHERE position = 'President'),
-  ARRAY['audit:view', 'exercises:review', 'members:approve', 'members:invite', 'members:preassign_position',
-        'members:view_all', 'positions:assign', 'skills:verify', 'training:view_org'],
-  'President: executive governance set'
+  ARRAY['audit:view', 'coaches:assign', 'exercises:approve', 'members:approve', 'members:assign_president',
+        'members:invite', 'members:preassign_position', 'members:view_all', 'permissions:manage',
+        'positions:assign', 'skills:verify', 'training:view_org', 'workout:assign'],
+  'President: executive governance set + President-only governance (D3)'
 );
 SELECT is(
   (SELECT perms FROM system_role_matrix WHERE role = 'System Administrator'),
@@ -81,7 +83,8 @@ SELECT is_empty(
 );
 SELECT is_empty(
   $$ SELECT role FROM system_role_matrix, unnest(perms) p
-     WHERE p LIKE 'members:%' OR p LIKE 'positions:%' OR p LIKE 'training:%' OR p LIKE 'skills:%' OR p LIKE 'exercises:%' $$,
+     WHERE p LIKE 'members:%' OR p LIKE 'positions:%' OR p LIKE 'training:%' OR p LIKE 'skills:%'
+        OR p LIKE 'exercises:%' OR p LIKE 'coaches:%' OR p LIKE 'workout:%' OR p LIKE 'permissions:%' $$,
   'no system role grants club governance or training permissions (Rule A)'
 );
 SELECT is(
@@ -106,6 +109,33 @@ SELECT is_empty(
   $$ SELECT position FROM position_matrix, unnest(perms) p
      WHERE p LIKE '%private_feedback%' AND position NOT IN ('Vice President', 'President') $$,
   'no position other than VP/President holds a private-feedback permission (Rule E)'
+);
+
+-- Sprint 2 frozen decisions D1–D4 (Roadmap v1.2 Section 9) ---------------------------
+SELECT is(
+  (SELECT array_agg(position ORDER BY position) FROM position_matrix WHERE 'workout:assign' = ANY (perms)),
+  ARRAY['Coach', 'Leader', 'President', 'Vice President'],
+  'D1: workout:assign is held by Leader, Coach, VP and President; never by Athlete'
+);
+SELECT is(
+  (SELECT array_agg(position ORDER BY position) FROM position_matrix WHERE 'coaches:assign' = ANY (perms)),
+  ARRAY['President', 'Vice President'],
+  'D3: primary coach assignment (coaches:assign) is VP and President only; Coaches cannot assign coaches'
+);
+SELECT is(
+  (SELECT array_agg(DISTINCT position ORDER BY position) FROM position_matrix, unnest(perms) p
+   WHERE p IN ('members:assign_president', 'permissions:manage')),
+  ARRAY['President'],
+  'D3: members:assign_president and permissions:manage are President-only'
+);
+SELECT is(
+  (SELECT array_agg(position ORDER BY position) FROM position_matrix WHERE 'exercises:approve' = ANY (perms)),
+  ARRAY['Coach', 'President', 'Vice President'],
+  'D4: exercises:approve is held by Coach, VP and President; not Leader or Athlete'
+);
+SELECT is_empty(
+  $$ SELECT name FROM public.permissions WHERE name = 'exercises:review' $$,
+  'D4: the Sprint 1 placeholder exercises:review no longer exists (renamed to exercises:approve)'
 );
 
 -- Behavioural check: the Leader cannot use governance RPCs even though they see org training.

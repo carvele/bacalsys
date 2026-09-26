@@ -63,11 +63,14 @@
     "db:verify": "node scripts/db/verify.mjs",
     "db:types": "supabase gen types typescript --local --schema public > src/types/database.ts",
     "e2e:skeleton": "node --env-file-if-exists=.env.local scripts/e2e/walking-skeleton.mjs",
-    "verify": "npm run typecheck && npm run lint && npm test && npm run db:verify",
+    "verify": "npm run typecheck && npm run lint && npm test && npm run test:scripts && npm run db:verify",
     "e2e:skeleton:hosted": "node --env-file=.env.hosted.local scripts/e2e/walking-skeleton.mjs",
     "build:web": "node scripts/web/build.mjs",
     "serve:web": "node scripts/web/serve.mjs 4173",
-    "build:web:pages": "node scripts/web/build.mjs --pages"
+    "build:web:pages": "node scripts/web/build.mjs --pages",
+    "test:scripts": "node --test \"scripts/**/__tests__/*.test.mjs\"",
+    "fixtures:cleanup": "node scripts/test/cleanup-fixtures.mjs",
+    "e2e:sprint2:hosted": "node --env-file=.env.hosted.local scripts/e2e/sprint2-slices.mjs"
   },
   "private": true,
   "jest": {

@@ -4,7 +4,7 @@ CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 -- ADR-002: let impersonated roles call pgTAP; rolled back with the test.
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA extensions TO anon, authenticated;
 
-SELECT plan(16);
+SELECT plan(28);
 
 -- Fixtures (as postgres) ------------------------------------------------------
 -- President: seed user 00000000-0000-4000-8000-00000000a001
@@ -64,9 +64,10 @@ SELECT is(
   jsonb_build_object(
     'positions', jsonb_build_array('President'),
     'permissions', jsonb_build_array(
-      'audit:view', 'exercises:review', 'members:approve', 'members:invite',
-      'members:preassign_position', 'members:view_all', 'positions:assign',
-      'skills:verify', 'training:view_org'),
+      'audit:view', 'coaches:assign', 'exercises:approve', 'members:approve',
+      'members:assign_president', 'members:invite', 'members:preassign_position',
+      'members:view_all', 'permissions:manage', 'positions:assign',
+      'skills:verify', 'training:view_org', 'workout:assign'),
     'is_system_admin', false
   ),
   'President access context has exact positions, permissions and is_system_admin'
@@ -127,6 +128,79 @@ SELECT is(
   '{"positions":[],"permissions":[],"is_system_admin":false}'::jsonb,
   'pending member has an empty access context'
 );
+RESET ROLE;
+
+-- ADR-003 (Option A-revised): position permissions require an active profile;
+-- system roles stay independent of club membership status --------------------
+--   77… suspended VP · 88… suspended Coach + active System Administrator
+--   99… pending System Administrator · aa… rejected Coach
+INSERT INTO auth.users (id, email, raw_user_meta_data) VALUES
+  ('77777777-7777-4777-8777-777777777777', 'suspended.vp@test.local', '{"full_name":"Suspended VP"}'),
+  ('88888888-8888-4888-8888-888888888888', 'suspended.sysadmin@test.local', '{"full_name":"Suspended SysAdmin"}'),
+  ('99999999-9999-4999-8999-999999999999', 'pending.sysadmin@test.local', '{"full_name":"Pending SysAdmin"}'),
+  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'rejected.coach@test.local', '{"full_name":"Rejected Coach"}');
+UPDATE public.profiles SET status = 'suspended'
+WHERE id IN ('77777777-7777-4777-8777-777777777777', '88888888-8888-4888-8888-888888888888');
+UPDATE public.profiles SET status = 'rejected' WHERE id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+INSERT INTO public.member_positions (profile_id, position_id)
+SELECT f.profile_id::uuid, pos.id
+FROM (VALUES
+  ('77777777-7777-4777-8777-777777777777', 'Vice President'),
+  ('88888888-8888-4888-8888-888888888888', 'Coach'),
+  ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'Coach')
+) AS f(profile_id, position_name)
+JOIN public.positions pos ON pos.name = f.position_name;
+INSERT INTO public.user_system_roles (user_id, role_id)
+SELECT u.id, sr.id
+FROM (VALUES ('88888888-8888-4888-8888-888888888888'::uuid), ('99999999-9999-4999-8999-999999999999'::uuid)) AS u(id)
+CROSS JOIN public.system_roles sr WHERE sr.name = 'System Administrator';
+
+SELECT set_config('request.jwt.claims', '{"sub":"77777777-7777-4777-8777-777777777777","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+SELECT ok(NOT app_private.has_permission('members:approve'), 'suspended VP: active VP position no longer grants members:approve');
+SELECT ok(NOT app_private.has_permission('audit:view'), 'suspended VP: no audit:view without an active system role');
+SELECT is(
+  public.get_my_access_context(),
+  '{"positions":[],"permissions":[],"is_system_admin":false}'::jsonb,
+  'suspended VP access context: no positions, no position-derived permissions'
+);
+RESET ROLE;
+
+SELECT set_config('request.jwt.claims', '{"sub":"88888888-8888-4888-8888-888888888888","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+SELECT ok(app_private.has_permission('system_roles:view'), 'suspended System Administrator keeps system_roles:view (system role)');
+SELECT ok(app_private.has_permission('audit:view'), 'suspended System Administrator keeps audit:view (system role)');
+SELECT ok(NOT app_private.has_permission('skills:verify'), 'suspended System Administrator loses Coach-position skills:verify');
+SELECT ok(NOT app_private.has_permission('members:approve'), 'suspended System Administrator has no club governance authority');
+SELECT is(
+  (SELECT ctx || jsonb_build_object('permissions', COALESCE(
+     (SELECT jsonb_agg(x ORDER BY x COLLATE "C") FROM jsonb_array_elements_text(ctx -> 'permissions') x), '[]'::jsonb))
+   FROM (SELECT public.get_my_access_context() AS ctx) s),
+  '{"positions":[],"permissions":["audit:view","system:configure","system_roles:assign","system_roles:view"],"is_system_admin":true}'::jsonb,
+  'suspended System Administrator context: no positions, only system-role permissions, is_system_admin'
+);
+RESET ROLE;
+
+SELECT set_config('request.jwt.claims', '{"sub":"99999999-9999-4999-8999-999999999999","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+SELECT ok(app_private.has_permission('system:configure'), 'pending System Administrator keeps system:configure (system role)');
+SELECT is(
+  (public.get_my_access_context() -> 'is_system_admin'),
+  'true'::jsonb,
+  'pending System Administrator context still reports is_system_admin'
+);
+RESET ROLE;
+
+SELECT set_config('request.jwt.claims', '{"sub":"aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+SELECT ok(NOT app_private.has_permission('skills:verify'), 'rejected Coach: no position-derived permissions');
+RESET ROLE;
+
+-- Status is the gate, not the position row: reinstatement restores authority.
+UPDATE public.profiles SET status = 'active' WHERE id = '77777777-7777-4777-8777-777777777777';
+SELECT set_config('request.jwt.claims', '{"sub":"77777777-7777-4777-8777-777777777777","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+SELECT ok(app_private.has_permission('members:approve'), 'reinstated (active) VP regains members:approve');
 RESET ROLE;
 
 SELECT set_config('request.jwt.claims', '', true);

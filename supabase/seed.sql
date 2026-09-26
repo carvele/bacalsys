@@ -34,6 +34,10 @@ INSERT INTO public.positions (id, name, rank, description) VALUES
 
 -- -----------------------------------------------------------------------------
 -- Permissions catalog
+-- Sprint 2 permissions (exercises:approve, coaches:assign, workout:assign,
+-- members:assign_president, permissions:manage) are reference data created by
+-- migration 20260926051843_sprint2_permission_matrix, so they also reach hosted
+-- projects; only their position mappings are repeated below.
 -- -----------------------------------------------------------------------------
 INSERT INTO public.permissions (name, description) VALUES
   ('members:view_all',            'View member profiles and positions across the organization.'),
@@ -42,7 +46,6 @@ INSERT INTO public.permissions (name, description) VALUES
   ('members:preassign_position',  'Pre-assign a position other than Athlete on an invitation.'),
   ('positions:assign',            'Assign and end organizational positions.'),
   ('training:view_org',           'View training records across the organization.'),
-  ('exercises:review',            'Review custom exercise submissions.'),
   ('skills:verify',               'Verify or revoke skill achievements.'),
   ('audit:view',                  'Read the audit log.'),
   ('system_roles:view',           'View system role assignments.'),
@@ -56,9 +59,12 @@ SELECT pos.id, perm.id
 FROM (VALUES
   ('Leader',         'members:view_all'),
   ('Leader',         'training:view_org'),
+  ('Leader',         'workout:assign'),
 
   ('Coach',          'members:view_all'),
   ('Coach',          'skills:verify'),
+  ('Coach',          'workout:assign'),
+  ('Coach',          'exercises:approve'),
 
   ('Vice President', 'members:view_all'),
   ('Vice President', 'members:approve'),
@@ -66,7 +72,9 @@ FROM (VALUES
   ('Vice President', 'members:preassign_position'),
   ('Vice President', 'positions:assign'),
   ('Vice President', 'training:view_org'),
-  ('Vice President', 'exercises:review'),
+  ('Vice President', 'exercises:approve'),
+  ('Vice President', 'coaches:assign'),
+  ('Vice President', 'workout:assign'),
   ('Vice President', 'skills:verify'),
   ('Vice President', 'audit:view'),
 
@@ -76,12 +84,17 @@ FROM (VALUES
   ('President',      'members:preassign_position'),
   ('President',      'positions:assign'),
   ('President',      'training:view_org'),
-  ('President',      'exercises:review'),
+  ('President',      'exercises:approve'),
+  ('President',      'coaches:assign'),
+  ('President',      'workout:assign'),
+  ('President',      'members:assign_president'),
+  ('President',      'permissions:manage'),
   ('President',      'skills:verify'),
   ('President',      'audit:view')
 ) AS m(position_name, permission_name)
 JOIN public.positions pos ON pos.name = m.position_name
-JOIN public.permissions perm ON perm.name = m.permission_name;
+JOIN public.permissions perm ON perm.name = m.permission_name
+ON CONFLICT (position_id, permission_id) DO NOTHING;
 
 -- -----------------------------------------------------------------------------
 -- System roles (decoupled from club hierarchy)

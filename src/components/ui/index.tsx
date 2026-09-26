@@ -140,6 +140,35 @@ export function Notice({ tone, children }: { tone: 'danger' | 'success' | 'warni
   );
 }
 
+/** Selectable pill for filters and multi-choice fields. */
+export function Chip({
+  label,
+  selected = false,
+  onPress,
+  disabled = false,
+}: {
+  label: string;
+  selected?: boolean;
+  onPress?: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <Pressable
+      accessibilityRole={onPress ? 'button' : 'text'}
+      accessibilityLabel={label}
+      accessibilityState={{ selected, disabled }}
+      disabled={disabled || !onPress}
+      onPress={onPress}
+      hitSlop={4}
+      className={`min-h-9 justify-center rounded-full border px-3 ${
+        selected ? 'border-brand bg-brand-soft' : 'border-surface-border bg-surface-raised'
+      } ${disabled ? 'opacity-50' : ''}`}
+    >
+      <Text className={`text-sm font-semibold ${selected ? 'text-brand' : 'text-ink-muted'}`}>{label}</Text>
+    </Pressable>
+  );
+}
+
 export function CenteredSpinner({ label }: { label?: string }) {
   return (
     <View className="flex-1 items-center justify-center gap-3 bg-surface">

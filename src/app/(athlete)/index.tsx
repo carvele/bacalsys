@@ -12,6 +12,10 @@ export default function AthleteHomeScreen() {
   const firstName = profile?.full_name.split(' ')[0] || 'Athlete';
   const positions = access?.positions ?? [];
   const canReviewMembers = hasPermission(access, 'members:approve');
+  const canAssignCoaches = hasPermission(access, 'coaches:assign');
+  const canReviewExercises = hasPermission(access, 'exercises:approve');
+  const isCoach = positions.includes('Coach');
+  const hasOfficerTools = canReviewMembers || canAssignCoaches || canReviewExercises;
 
   return (
     <Screen>
@@ -39,10 +43,31 @@ export default function AthleteHomeScreen() {
           <Text className="text-ink-muted">No workouts assigned yet. Your coach&apos;s assignments will appear here.</Text>
         </Card>
 
-        {canReviewMembers ? (
+        <Card className="gap-3">
+          <Text className="text-title text-ink">Exercise library</Text>
+          <Text className="text-ink-muted">Browse official movements and create your own custom exercises.</Text>
+          <Button label="Open exercise library" variant="secondary" onPress={() => router.push('/exercises')} />
+        </Card>
+
+        {isCoach ? (
+          <Card className="gap-3">
+            <Text className="text-title text-ink">Coaching</Text>
+            <Button label="My athletes" variant="secondary" onPress={() => router.push('/my-athletes')} />
+          </Card>
+        ) : null}
+
+        {hasOfficerTools ? (
           <Card className="gap-3">
             <Text className="text-title text-ink">Officer tools</Text>
-            <Button label="Review member applications" onPress={() => router.push('/member-approvals')} />
+            {canReviewMembers ? (
+              <Button label="Review member applications" onPress={() => router.push('/member-approvals')} />
+            ) : null}
+            {canAssignCoaches ? (
+              <Button label="Assign coaches" onPress={() => router.push('/coach-assignment')} />
+            ) : null}
+            {canReviewExercises ? (
+              <Button label="Review custom exercises" onPress={() => router.push('/exercise-approvals')} />
+            ) : null}
           </Card>
         ) : null}
 

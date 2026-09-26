@@ -63,3 +63,6 @@ export function resolveAccessRoute(i: AccessInputs): AccessRoute {
 
 export const hasPermission = (access: AccessContext | undefined, permission: string) =>
   access?.permissions.includes(permission) ?? false;
+
+/** Permissions that unlock at least one screen in the (officer) route group. */
+export const OFFICER_PERMISSIONS = ['members:approve', 'coaches:assign', 'exercises:approve'] as const;

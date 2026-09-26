@@ -10,6 +10,8 @@ export default function OfficerLayout() {
       }}
     >
       <Stack.Screen name="member-approvals" options={{ title: 'Member approvals' }} />
+      <Stack.Screen name="coach-assignment" options={{ title: 'Assign coaches' }} />
+      <Stack.Screen name="exercise-approvals" options={{ title: 'Exercise approvals' }} />
     </Stack>
   );
 }

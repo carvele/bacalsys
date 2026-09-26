@@ -27,6 +27,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test -- --ci
+      - run: npm run test:scripts
       # Rebuilds the database from migrations + seed and runs every pgTAP suite (PGlite, no Docker).
       - run: npm run db:verify
 

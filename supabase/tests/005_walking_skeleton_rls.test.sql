@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 -- ADR-002: let impersonated roles call pgTAP; rolled back with the test.
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA extensions TO anon, authenticated;
 
-SELECT plan(30);
+SELECT plan(46);
 
 -- 1. Juan registers -------------------------------------------------------------
 INSERT INTO auth.users (id, email, raw_user_meta_data)
@@ -201,6 +201,93 @@ SELECT throws_ok(
   $$ SELECT public.approve_member('33333333-3333-4333-8333-333333333333') $$,
   '42501', NULL,
   'President cannot approve a member of another organization'
+);
+RESET ROLE;
+
+-- 9. ADR-003 / F-S2-03: Sprint 1 surfaces fail closed for suspended officers ----
+--   …b1 suspended VP · …b2 suspended Coach · …b3 pending applicant
+INSERT INTO auth.users (id, email, raw_user_meta_data) VALUES
+  ('b0000000-0000-4000-8000-0000000000b1', 'suspended.vp@test.local', '{"full_name":"Suspended VP"}'),
+  ('b0000000-0000-4000-8000-0000000000b2', 'suspended.coach@test.local', '{"full_name":"Suspended Coach"}'),
+  ('b0000000-0000-4000-8000-0000000000b3', 'applicant@test.local', '{"full_name":"Applicant"}');
+UPDATE public.profiles SET status = 'suspended'
+WHERE id IN ('b0000000-0000-4000-8000-0000000000b1', 'b0000000-0000-4000-8000-0000000000b2');
+INSERT INTO public.member_positions (profile_id, position_id)
+SELECT f.profile_id::uuid, pos.id
+FROM (VALUES
+  ('b0000000-0000-4000-8000-0000000000b1', 'Vice President'),
+  ('b0000000-0000-4000-8000-0000000000b2', 'Coach')
+) AS f(profile_id, position_name)
+JOIN public.positions pos ON pos.name = f.position_name;
+
+SELECT isnt_empty($$ SELECT 1 FROM public.audit_logs $$, 'precondition: the audit log has rows');
+
+SELECT set_config('request.jwt.claims', '{"sub":"b0000000-0000-4000-8000-0000000000b1","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+SELECT throws_ok(
+  $$ SELECT * FROM public.list_pending_members() $$,
+  '42501', NULL,
+  'suspended VP cannot list pending members'
+);
+SELECT throws_ok(
+  $$ SELECT public.approve_member('b0000000-0000-4000-8000-0000000000b3') $$,
+  '42501', NULL,
+  'suspended VP cannot approve members'
+);
+SELECT throws_ok(
+  $$ SELECT public.create_invitation('invitee@test.local') $$,
+  '42501', NULL,
+  'suspended VP cannot create invitations'
+);
+SELECT is_empty($$ SELECT 1 FROM public.audit_logs $$, 'suspended VP cannot read the audit log');
+SELECT is((SELECT count(*) FROM public.profiles), 1::bigint, 'suspended VP sees only their own profile');
+SELECT is_empty(
+  $$ SELECT 1 FROM public.member_positions WHERE profile_id <> 'b0000000-0000-4000-8000-0000000000b1' $$,
+  'suspended VP cannot read other members'' positions'
+);
+RESET ROLE;
+
+SELECT is(
+  (SELECT status FROM public.profiles WHERE id = 'b0000000-0000-4000-8000-0000000000b3'),
+  'pending_approval'::public.member_status,
+  'the applicant is still pending after the rejected approval'
+);
+
+SELECT set_config('request.jwt.claims', '{"sub":"b0000000-0000-4000-8000-0000000000b2","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+SELECT ok(NOT app_private.has_permission('members:view_all'), 'suspended Coach loses members:view_all');
+SELECT is((SELECT count(*) FROM public.profiles), 1::bigint, 'suspended Coach sees only their own profile');
+SELECT is_empty(
+  $$ SELECT 1 FROM public.member_positions WHERE profile_id <> 'b0000000-0000-4000-8000-0000000000b2' $$,
+  'suspended Coach cannot read other members'' positions'
+);
+RESET ROLE;
+
+-- An active System Administrator role separately authorizes audit access only.
+INSERT INTO public.user_system_roles (user_id, role_id)
+SELECT 'b0000000-0000-4000-8000-0000000000b1', id FROM public.system_roles WHERE name = 'System Administrator';
+SELECT set_config('request.jwt.claims', '{"sub":"b0000000-0000-4000-8000-0000000000b1","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+SELECT isnt_empty($$ SELECT 1 FROM public.audit_logs $$, 'suspended VP with an active System Administrator role reads the audit log');
+SELECT throws_ok(
+  $$ SELECT * FROM public.list_pending_members() $$,
+  '42501', NULL,
+  'the System Administrator role does not restore club governance (list_pending_members)'
+);
+RESET ROLE;
+
+-- Active officers keep their behavior.
+SELECT set_config('request.jwt.claims', '{"sub":"00000000-0000-4000-8000-00000000a001","role":"authenticated"}', true);
+SET LOCAL ROLE authenticated;
+SELECT isnt_empty($$ SELECT 1 FROM public.audit_logs $$, 'active President still reads the audit log');
+SELECT isnt_empty(
+  $$ SELECT 1 FROM public.list_pending_members() WHERE id = 'b0000000-0000-4000-8000-0000000000b3' $$,
+  'active President still sees the applicant in the queue'
+);
+SELECT is(
+  public.approve_member('b0000000-0000-4000-8000-0000000000b3') ->> 'status',
+  'active',
+  'active President can still approve members'
 );
 RESET ROLE;
 

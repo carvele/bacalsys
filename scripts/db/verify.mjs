@@ -13,47 +13,31 @@
  *
  * Usage: node scripts/db/verify.mjs [--filter <substring>]
  */
-import { readdirSync, readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
 
-import { PGlite } from '@electric-sql/pglite';
-import { pgcrypto } from '@electric-sql/pglite/contrib/pgcrypto';
+import { buildDatabase, read, root } from './build-db.mjs';
 
-const root = resolve(fileURLToPath(import.meta.url), '../../..');
-const read = (...p) => readFileSync(join(root, ...p), 'utf8');
 const filterArg = process.argv.indexOf('--filter');
 const filter = filterArg > -1 ? process.argv[filterArg + 1] : null;
 
-const db = new PGlite({ extensions: { pgcrypto } });
-
-async function step(label, sql) {
-  try {
-    await db.exec(sql);
-    console.log(`  ✓ ${label}`);
-  } catch (err) {
-    console.error(`  ✗ ${label}\n    ${err.message}`);
-    if (err.position) {
-      const pos = Number(err.position);
-      console.error(`    near: …${sql.slice(Math.max(0, pos - 120), pos + 60).replace(/\s+/g, ' ')}…`);
-    }
-    process.exit(1);
-  }
-}
-
-console.log(`# ${(await db.query('select version() as v')).rows[0].v.split(' on ')[0]}`);
 console.log('# Building database from scratch');
-await step('supabase platform shim', read('scripts/db/supabase-shim.sql'));
-await step('pgTAP shim', read('scripts/db/pgtap-shim.sql'));
-
-const migrations = readdirSync(join(root, 'supabase/migrations'))
-  .filter((f) => f.endsWith('.sql'))
-  .sort();
-for (const file of migrations) {
-  // Supabase applies each migration file in its own transaction.
-  await step(`migration ${file}`, `BEGIN;\n${read('supabase/migrations', file)}\nCOMMIT;`);
+let db;
+try {
+  db = await buildDatabase({
+    onStep: (label, err, sql) => {
+      if (!err) return console.log(`  ✓ ${label}`);
+      console.error(`  ✗ ${label}\n    ${err.message}`);
+      if (err.position) {
+        const pos = Number(err.position);
+        console.error(`    near: …${sql.slice(Math.max(0, pos - 120), pos + 60).replace(/\s+/g, ' ')}…`);
+      }
+    },
+  });
+} catch {
+  process.exit(1);
 }
-await step('seed.sql', read('supabase/seed.sql'));
+console.log(`# ${(await db.query('select version() as v')).rows[0].v.split(' on ')[0]}`);
 
 // Match the search_path the Supabase test runner uses.
 await db.exec(`SET search_path = "$user", public, extensions;`);

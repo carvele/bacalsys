@@ -1,9 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Redirect } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button, Card, CenteredSpinner, Notice } from '@/components/ui';
+import { hasPermission } from '@/features/auth/access';
+import { useAuth } from '@/features/auth/use-auth';
 import { describeError } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
 
@@ -24,12 +27,16 @@ type PendingMember = {
  * Both RPCs re-check members:approve server-side.
  */
 export default function MemberApprovalsScreen() {
+  const { access } = useAuth();
+  const allowed = hasPermission(access, 'members:approve');
   const queryClient = useQueryClient();
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ tone: 'success' | 'danger'; text: string } | null>(null);
 
   const pending = useQuery({
     queryKey: pendingKey,
+    // The (officer) group now also opens for coaches:assign / exercises:approve holders.
+    enabled: allowed,
     queryFn: async (): Promise<PendingMember[]> => {
       const { data, error } = await supabase.rpc('list_pending_members');
       if (error) throw error;
@@ -53,6 +60,7 @@ export default function MemberApprovalsScreen() {
     },
   });
 
+  if (!allowed) return <Redirect href="/" />;
   if (pending.isPending) return <CenteredSpinner label="Loading applications…" />;
 
   return (
