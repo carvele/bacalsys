@@ -1,10 +1,7 @@
 # Sprint 2: Membership & Exercise Library — engineering status
 
-> **Status: IMPLEMENTATION COMPLETE, INCLUDING TASK 2.14 (ADR-003). READY FOR THE FINAL REVIEWER GATE (2026-09-26).**
-> This is **not** an acceptance claim. Sprint 2 is accepted only when the product owner relays the Reviewer's
-> approval.
-> The High finding F-S2-03 is **resolved**: ADR-003 Option A-revised is Accepted and Implemented (§1 Task 2.14, §9).
-> Remaining open item for the gate: the manual signed-in UI click-through (see *Remaining gaps*).
+> **Status: ACCEPTED (2026-09-26).** Reviewer approval was relayed by the product owner, and the signed-in UI
+> click-through passed. See [ACCEPTANCE.md](ACCEPTANCE.md). Tag `sprint-02-accepted`.
 
 - **Baseline:** Roadmap v1.2, Section 9 (D1–D4, Acceptance Slices 1–2, Tasks 2.0–2.14).
 - **Environment:**
@@ -343,7 +340,7 @@ rather than 14.
 
 ## 12. Unverified acceptance criteria / remaining gaps
 
-1. **Signed-in UI click-through (Tasks 2.6, 2.9, 2.10): pending, product owner.** I don't enter passwords or session
+1. **Signed-in UI click-through (Tasks 2.6, 2.9, 2.10): ✅ PASSED**, performed by the product owner on the deployed build (commit `63d1aee`), all steps including the rejection path. Original note: I don't enter passwords or session
    tokens into a page that sends them to a remote host, so the signed-in screens were verified by typecheck, Jest logic
    tests and the signed-out smoke test only. Suggested steps, on the web build after deploy:
    1. As President, open *Assign coaches*. Assign a member who holds the Coach position to an athlete, then change it.
