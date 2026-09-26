@@ -3,6 +3,35 @@
     "expo@claude-plugins-official": true
   },
   "permissions": {
-    "allow": ["Bash(git add:*)", "Bash(git commit:*)"]
+    "allow": ["Bash(git add:*)", "Bash(git commit:*)"],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(supabase db push:*)",
+      "Bash(npx supabase db push:*)",
+      "Bash(supabase db reset --linked:*)",
+      "Bash(npx supabase db reset --linked:*)",
+      "Bash(npx eas-cli@latest submit:*)",
+      "Bash(npx eas-cli@latest update:*)",
+      "Bash(eas submit:*)",
+      "Bash(eas update:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-edits.js\"", "timeout": 15 }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/typecheck-edited.js\"", "timeout": 90, "statusMessage": "Typechecking edited file..." }
+        ]
+      }
+    ]
   }
 }
