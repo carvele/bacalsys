@@ -1,5 +1,7 @@
 # Sprint 1: Final Acceptance
 
+> **Status: ACCEPTED on 2026-09-26.** All 14 items are satisfied; iOS is covered by the explicit environment waiver [W-01](findings/W-01-ios-environment-waiver.md).
+
 Checklist set by the product owner on 2026-09-25. An item is checked only with the evidence beside it.
 
 | # | Item | Status | Evidence |
@@ -12,12 +14,12 @@ Checklist set by the product owner on 2026-09-25. An item is checked only with t
 | 6 | Install and boot Android development client | ✅ | Installed `ph.bacalsys.app` 0.1.0 on the Pixel 4 AVD (Android 16, x86_64, WHPX-accelerated). Dev client runtime `exposdk:57.0.0`; JS `Running "main"` on Fabric (new architecture); no JS errors or `AndroidRuntime` crashes in logcat. Login screen renders with design tokens; tapping *Create an account* navigates to Register. Surfaced and fixed [F-08](findings/F-08-link-classname-native.md). |
 | 7 | Confirm hosted Supabase connectivity from Android | ✅ (network + config) | The emulator opens TCP 443 to `sfptojkkmjggssqzyseo.supabase.co`; the served Android bundle contains the hosted URL (1×) and no local-stack URL (0×). **Not yet exercised:** an in-app authenticated request on Android, which requires signing in on the device. The same client code is proven on web and by the API E2E. |
 | 8 | Build/boot iOS development client **or** document waiver | ⚠️ Waived | [W-01](findings/W-01-ios-environment-waiver.md): no macOS, and EAS needs the owner's Expo login. The `development-simulator` profile is ready in `eas.json`. |
-| 9 | One real UI walking-skeleton click-through | _pending: needs the product owner_ | See "Click-through" below |
+| 9 | One real UI walking-skeleton click-through | ✅ | Performed by the product owner on 2026-09-26 against the live web build (https://carvele.github.io/bacalsys/, Chrome); all 5 steps passed. Database cross-check: the test member went pending → active with an Athlete position 7 s after registering; `member_positions.assigned_by` is the officer account; the audit trail reads `profiles.insert` (system, signup trigger) → `profiles.update` (user = officer) → `member_positions.insert` (user = officer). See "Click-through results" below. |
 | 10 | Review permission-to-position seed matrix | ✅ | [findings/permission-matrix-review.md](findings/permission-matrix-review.md); three decisions open (D1–D3), none blocking Sprint 1 |
 | 11 | pgTAP tests for seeded permission boundaries | ✅ | `supabase/tests/006_permission_matrix.test.sql`: 19/19 offline **and** on hosted Supabase; drift guard confirmed to catch a planted typo |
 | 12 | `npm run verify` | ✅ | typecheck, lint (incl. F-08 rule), Jest 27/27, pgTAP 122/122 on a fresh DB |
 | 13 | `npm run e2e:skeleton:hosted` | ✅ | 24/24 against `bacalsys-dev` |
-| 14 | Tag / report Sprint 1 as ACCEPTED | _pending_ | only after items 1–13 |
+| 14 | Tag / report Sprint 1 as ACCEPTED | ✅ | **Sprint 1 ACCEPTED 2026-09-26.** Git tag `sprint-01-accepted`. iOS covered by waiver W-01. |
 
 Also done during acceptance, as requested:
 - **TOTP MFA** re-enabled on `bacalsys-dev` (`[auth.mfa.totp]` in `config.toml`, pushed); the Pages URL was added to the Auth redirect list.
@@ -37,7 +39,18 @@ Nothing here needs a password shared with the agent.
 5. **Device A (protected navigation):** open https://carvele.github.io/bacalsys/member-approvals directly.
    Expect to land back on Athlete Home, with no approval queue shown.
 
-Record the result (pass/fail per step, device/browser used) here.
+### Click-through results (2026-09-26, Chrome, live web build)
+
+The officer account was promoted to President via SQL (actor `migration`, audited) after the product owner registered it
+through the live site. That registration also exercised the real signup path, landing in `pending_approval` in the default branch.
+
+| Step | Result |
+|---|---|
+| 1. Officer account: *Check status* → Home with President chip + Officer tools | ✅ pass |
+| 2. Private window: register test member → **Awaiting approval** | ✅ pass |
+| 3. Officer: *Review member applications* → *Approve as Athlete* → *Confirm* | ✅ pass |
+| 4. Test member: *Check status* → Athlete Home, no Officer tools | ✅ pass |
+| 5. Test member: open `/bacalsys/member-approvals` directly → back on Home, no queue shown | ✅ pass |
 
 ## Hosted E2E test-data cleanup (strategy, not a blocker)
 

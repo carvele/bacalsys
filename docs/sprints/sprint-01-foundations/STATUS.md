@@ -1,5 +1,7 @@
 # Sprint 1: Walking Skeleton & Foundations: Status Report
 
+> **Sprint 1 ACCEPTED on 2026-09-26.** See [ACCEPTANCE.md](ACCEPTANCE.md) for the final checklist and evidence. This report is the sprint's engineering record.
+
 Baseline: BaCalSys Implementation Roadmap v1.2 (frozen). Date: 2026-09-25.
 
 ## Summary
