@@ -47,7 +47,46 @@ Docs: https://docs.expo.dev/eas/index.md
 - **Database:** add new migrations as `supabase/migrations/NNN_name.sql`. Never edit an applied migration.
   Every SECURITY DEFINER function pins `SET search_path = ''` and schema-qualifies everything.
   Privileged writes go through `public.*` wrappers → `app_private.*_internal`. Grant every table and function explicitly (ADR-002).
-- **Verify before declaring done:** `npm run verify` (typecheck + lint + Jest + offline pgTAP rebuild).
-  With Docker available, also `npm run db:test` and `npm run e2e:skeleton`.
+- **Verify before declaring done:** `npm run verify` (typecheck + lint + Jest + offline pgTAP rebuild), then
+  `npm run e2e:skeleton:hosted` against the hosted dev project. With Docker available, also `npm run db:test` and
+  `npm run e2e:skeleton` locally. UI or native changes also need a web check and, per sprint gate, an Android dev-client boot.
 - **Client route guards are UX only.** Authorization lives in RLS and `app_private.has_permission()`.
 - Sprint status, acceptance and findings: `docs/sprints/<sprint>/` (STATUS.md, ACCEPTANCE.md, findings/).
+
+## Planner / Executor / Reviewer workflow
+
+BaCalSys is built by three AI tools with fixed roles. The product owner relays work between them.
+
+| Role | Tool | Owns |
+|---|---|---|
+| **Planner** | Antigravity | Architecture, the frozen roadmap, backlog, task specs, ADR decisions |
+| **Executor** | Claude | Code, migrations, commands, UI, automated tests, commits, evidence |
+| **Reviewer** | ChatGPT | Architecture audits, security reviews, gate approvals |
+
+**Executor rules**
+
+- **Build from the spec.** Implement the Planner's task specs and acceptance criteria. Don't re-plan the architecture or
+  add scope. If a spec conflicts with the baseline or can't be met as written, raise an ADR with status **Proposed**
+  (`docs/adr/`, using `ADR-000-template.md`) and send the decision back to the Planner. An ADR becomes **Accepted** only
+  when the product owner relays that decision. Never change the baseline silently.
+- **Classify every discovery.** Anything found during execution is a Bug, Backlog Refinement, or ADR. Record it as one file
+  per finding in `docs/sprints/<sprint>/findings/` (symptom, root cause, class, fix, regression test). Fix bugs with a
+  failing-first regression test, and use forward-only migrations.
+- **Produce evidence, not assertions.** Each sprint delivers `STATUS.md` (engineering record), `ACCEPTANCE.md` (one row per
+  gate item with evidence: commands run, test counts, CI run links, screenshots) and `findings/`. State what was
+  **not** verified as plainly as what was. A check that wasn't run is marked pending or waived, never passed.
+- **Reviewer gates.** A gate is closed only when the product owner relays the Reviewer's approval. The Executor never
+  self-approves, never marks a checklist item done without evidence, and tags a sprint (`sprint-NN-accepted`) only
+  after every item is satisfied or explicitly waived.
+- **Stay in your lane.** Hands-on steps the Executor must not perform, such as creating accounts or entering passwords in a
+  browser, deleting production data, or logging into third-party services, go back to the product owner as short,
+  exact instructions.
+
+**Handoff artifacts**
+
+| From → To | Artifact |
+|---|---|
+| Planner → Executor | Task spec + Definition of Done; ADR decisions |
+| Executor → Planner | Proposed ADRs; open decisions (e.g. `findings/permission-matrix-review.md`) |
+| Executor → Reviewer | `STATUS.md`, `ACCEPTANCE.md`, `findings/`, CI links, the git diff or tag |
+| Reviewer → Executor | Gate checklist, required fixes, approvals |
