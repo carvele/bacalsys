@@ -310,9 +310,10 @@ left open:
   [run 36332796594](https://github.com/carvele/bacalsys/actions/runs/36332796594): **green**.
 - Commit [`455763f`](https://github.com/carvele/bacalsys/commit/455763f) — filled in the `4b7da12` commit hash/CI link
   above once available. CI [run 36332997632](https://github.com/carvele/bacalsys/actions/runs/36332997632): **green**.
-- Commit `<pending>` — the **F-S4-02 second narrow re-review fix**: `active.tsx` render-priority correction via
-  `resolveWorkoutScreenState()` (new `workout-screen-state.ts` + 8 Jest tests), the finding-doc follow-up section,
-  and this STATUS.md/ACCEPTANCE.md update. CI run `<pending>` — to be filled in once pushed.
+- Commit [`611ef49`](https://github.com/carvele/bacalsys/commit/611ef49) — the **F-S4-02 second narrow re-review
+  fix**: `active.tsx` render-priority correction via `resolveWorkoutScreenState()` (new `workout-screen-state.ts` +
+  8 Jest tests), the finding-doc follow-up section, and this STATUS.md/ACCEPTANCE.md update. CI
+  [run 36333900397](https://github.com/carvele/bacalsys/actions/runs/36333900397): **green**.
 - **Web smoke check**: opened the live deployment (`https://carvele.github.io/bacalsys/`, rebuilt by each of the runs
   above) in a browser under the product owner's own already-signed-in session — home screen and the "Workout
   routines" → "My routines" catalog screen both render with zero console errors. No mutating action was taken (no
