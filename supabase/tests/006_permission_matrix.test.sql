@@ -42,21 +42,21 @@ SELECT is(
 );
 SELECT is(
   (SELECT perms FROM position_matrix WHERE position = 'Coach'),
-  ARRAY['exercises:approve', 'members:view_all', 'skills:verify', 'workout:assign'],
-  'Coach: member directory, skill verification, exercise approval (D4), workout assignment (D1); athlete scope comes from coach_assignments'
+  ARRAY['exercises:approve', 'members:view_all', 'skills:verify', 'workout:assign', 'workouts:publish_org'],
+  'Coach: member directory, skill verification, exercise approval (D4), workout assignment (D1), org template publishing (D5); athlete scope comes from coach_assignments'
 );
 SELECT is(
   (SELECT perms FROM position_matrix WHERE position = 'Vice President'),
   ARRAY['audit:view', 'coaches:assign', 'exercises:approve', 'members:approve', 'members:invite',
         'members:preassign_position', 'members:view_all', 'positions:assign', 'skills:verify',
-        'training:view_org', 'workout:assign'],
+        'training:view_org', 'workout:assign', 'workouts:manage_org', 'workouts:publish_org'],
   'Vice President: executive governance set (no President-only governance, D3)'
 );
 SELECT is(
   (SELECT perms FROM position_matrix WHERE position = 'President'),
   ARRAY['audit:view', 'coaches:assign', 'exercises:approve', 'members:approve', 'members:assign_president',
         'members:invite', 'members:preassign_position', 'members:view_all', 'permissions:manage',
-        'positions:assign', 'skills:verify', 'training:view_org', 'workout:assign'],
+        'positions:assign', 'skills:verify', 'training:view_org', 'workout:assign', 'workouts:manage_org', 'workouts:publish_org'],
   'President: executive governance set + President-only governance (D3)'
 );
 SELECT is(

@@ -36,8 +36,10 @@ INSERT INTO public.positions (id, name, rank, description) VALUES
 -- Permissions catalog
 -- Sprint 2 permissions (exercises:approve, coaches:assign, workout:assign,
 -- members:assign_president, permissions:manage) are reference data created by
--- migration 20260926051843_sprint2_permission_matrix, so they also reach hosted
--- projects; only their position mappings are repeated below.
+-- migration 20260926051843_sprint2_permission_matrix, and the Sprint 3 D5
+-- permissions (workouts:publish_org, workouts:manage_org) by
+-- 20260926120420_workout_permissions, so they also reach hosted projects;
+-- only their position mappings are repeated below.
 -- -----------------------------------------------------------------------------
 INSERT INTO public.permissions (name, description) VALUES
   ('members:view_all',            'View member profiles and positions across the organization.'),
@@ -65,6 +67,7 @@ FROM (VALUES
   ('Coach',          'skills:verify'),
   ('Coach',          'workout:assign'),
   ('Coach',          'exercises:approve'),
+  ('Coach',          'workouts:publish_org'),
 
   ('Vice President', 'members:view_all'),
   ('Vice President', 'members:approve'),
@@ -77,6 +80,8 @@ FROM (VALUES
   ('Vice President', 'workout:assign'),
   ('Vice President', 'skills:verify'),
   ('Vice President', 'audit:view'),
+  ('Vice President', 'workouts:publish_org'),
+  ('Vice President', 'workouts:manage_org'),
 
   ('President',      'members:view_all'),
   ('President',      'members:approve'),
@@ -90,7 +95,9 @@ FROM (VALUES
   ('President',      'members:assign_president'),
   ('President',      'permissions:manage'),
   ('President',      'skills:verify'),
-  ('President',      'audit:view')
+  ('President',      'audit:view'),
+  ('President',      'workouts:publish_org'),
+  ('President',      'workouts:manage_org')
 ) AS m(position_name, permission_name)
 JOIN public.positions pos ON pos.name = m.position_name
 JOIN public.permissions perm ON perm.name = m.permission_name

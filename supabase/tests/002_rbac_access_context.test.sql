@@ -67,7 +67,7 @@ SELECT is(
       'audit:view', 'coaches:assign', 'exercises:approve', 'members:approve',
       'members:assign_president', 'members:invite', 'members:preassign_position',
       'members:view_all', 'permissions:manage', 'positions:assign',
-      'skills:verify', 'training:view_org', 'workout:assign'),
+      'skills:verify', 'training:view_org', 'workout:assign', 'workouts:manage_org', 'workouts:publish_org'),
     'is_system_admin', false
   ),
   'President access context has exact positions, permissions and is_system_admin'

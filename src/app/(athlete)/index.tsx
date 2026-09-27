@@ -49,6 +49,12 @@ export default function AthleteHomeScreen() {
           <Button label="Open exercise library" variant="secondary" onPress={() => router.push('/exercises')} />
         </Card>
 
+        <Card className="gap-3">
+          <Text className="text-title text-ink">Workout routines</Text>
+          <Text className="text-ink-muted">Build set-by-set routines and browse your club&apos;s templates.</Text>
+          <Button label="Open routines" variant="secondary" onPress={() => router.push('/workouts')} />
+        </Card>
+
         {isCoach ? (
           <Card className="gap-3">
             <Text className="text-title text-ink">Coaching</Text>
