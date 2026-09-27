@@ -1,15 +1,12 @@
 # Sprint 4: Acceptance Checklist
 
-> **Status: F-S4-02 SECOND NARROW RE-REVIEW FIX COMPLETE — READY FOR RE-REVIEW.** The Reviewer's first
-> implementation/evidence gate returned **FAIL** for one defect (F-S4-02); it was fixed, then the Reviewer's first
-> narrow re-review caught a remaining race in `workout/active.tsx`'s call ordering (fixed), then a second narrow
-> re-review caught one more integration defect: the fail-closed error was set but rendered unreachable behind an
-> indefinite spinner, because the same `sessionId === null` that correctly blocked `setSessionId` also kept the
-> spinner condition true. Fixed by giving the start error render-priority over the spinner. Section 11 architecture,
-> F-S4-01, F-S4-P13, F-S4-P14, permissions, RLS, server mutation semantics, and the `OutboxStorage`/SQLite/IndexedDB
-> design were not touched by any of the three fixes. No Reviewer verdict on this latest fix has been relayed yet. The
-> Executor never self-approves or tags a sprint without that relay — see [STATUS.md](STATUS.md) header for the full
-> gate history.
+> **Status: ACCEPTED.** Tag `sprint-04-accepted`. The ChatGPT Reviewer's verdict, relayed by the product owner:
+> **"SPRINT 4 IMPLEMENTATION GATE PASS — ACCEPTED"**. The Reviewer independently verified the repository delta (not
+> just the handoff summary): `resolveWorkoutScreenState()`'s start-error-over-spinner priority, `active.tsx`'s
+> visible failure rendering with a "Go back" action and no re-invocation of `start_workout_session`, the intact
+> persist-before-ready ordering invariant, the 8 new state-priority tests and their mutation-test validity, and both
+> commits (`611ef49`, `4a0101d`) and CI runs (`36333900397`, `36334082522`) green. All three F-S4-02 rounds close as
+> one resolved finding. See [STATUS.md](STATUS.md) header for the full gate history.
 
 An item is checked only with the evidence beside it. Detail is in [STATUS.md](STATUS.md).
 
@@ -30,7 +27,7 @@ An item is checked only with the evidence beside it. Detail is in [STATUS.md](ST
 | 13 | Supabase advisors | ✅ | No new security findings; 1 genuine performance gap (4 uncovered FKs) found and fixed (STATUS §10) |
 | 14 | F-S4-01 (`session_set_load_consistency` NULL-vs-CHECK gap) resolved | ✅ | Fixed pre-hosted-apply, in the initial schema migration; pgTAP 011 §2 |
 | 15 | F-S4-02 (offline outbox server handshake not durable across restart) resolved, incl. both narrow re-review follow-ups | ✅ | `session_handshakes` durable store (SQLite table / IndexedDB store), 2 Jest restart-recovery tests; the first narrow re-review's `active.tsx` ordering/fail-closed fix via `beginOnlineSession()` (new `session-start.ts`), 3 more Jest tests; the second narrow re-review's render-priority fix via `resolveWorkoutScreenState()` (new `workout-screen-state.ts`), 8 more Jest tests; all three rounds mutation-tested (STATUS §2–3) |
-| 16 | CI green for every pushed commit | ✅ | Runs 36324519669, 36327084129, 36327659766, 36329178710, 36330960227, 36331210108, 36332796594, 36332997632, 36333900397 (second-narrow-re-review-fix commit `611ef49`) — all green (STATUS §12) |
+| 16 | CI green for every pushed commit | ✅ | Runs 36324519669, 36327084129, 36327659766, 36329178710, 36330960227, 36331210108, 36332796594, 36332997632, 36333900397, 36334082522 — all green, independently re-verified by the Reviewer (STATUS §12) |
 | 17 | Client: offline outbox, sync engine, rest timer, substitution modal, player + summary screens (Tasks 4.9–4.14) | ✅ | STATUS §4; 36 new Jest tests incl. the full online→offline→reconnect→offline→bundle acceptance scenario, the F-S4-02 restart-recovery scenario, the first narrow re-review's online-start ordering/fail-closed scenario, and the second narrow re-review's render-priority scenario |
 | 18 | Android dev-client boot (mandatory: 4 native modules added) | ✅ | Build/install/launch succeeded, all 4 modules autolinked, no crash in logcat — STATUS §11 |
 | 19 | Signed-in UI click-through | ⏳ Pending product owner | Read-only web smoke check only (STATUS §12); interactive click-through of the new screens not performed by the Executor (credential/live-account rule) |
@@ -41,7 +38,7 @@ An item is checked only with the evidence beside it. Detail is in [STATUS.md](ST
 | 24 | App-process-kill mid-session recovery | ⚠️ Partially out of scope, documented | STATUS §9/§13 — the durable outbox rows (incl. the handshake, per F-S4-02) reliably survive and resume syncing; only the athlete's in-memory UI draft (`session-store.ts`) does not |
 | 25 | Circuit-block round repetition / AMRAP countdown UI | ⚠️ Out of scope, documented | STATUS §9/§13 — athlete can freely log additional sets instead |
 | 26 | F-S4-02 hosted recovery probe | ⚠️ Not applicable, documented | STATUS §13 — a client-local-storage-restart defect has no hosted-RPC surface to probe; covered instead by the Jest restart-recovery tests against the real `OutboxStorage` contract |
-| 27 | Tag Sprint 4 as accepted | ⏳ **Not done** | Awaiting the Reviewer gate relay; the Executor does not self-approve or tag |
+| 27 | Tag Sprint 4 as accepted | ✅ **Done** | Reviewer verdict **ACCEPTED**, relayed by the product owner; tagged `sprint-04-accepted` |
 
 ## Notes
 
@@ -49,9 +46,8 @@ An item is checked only with the evidence beside it. Detail is in [STATUS.md](ST
   pre-hosted-apply) and [F-S4-02](findings/F-S4-02-outbox-handshake-not-durable-across-restart.md) (Bug, High, found
   by the Reviewer's gate, with two narrow re-review follow-ups documented in the same finding file) — both classified
   as Bugs (implementation corrections to how the frozen Section 11 requirement, or the client's own stated
-  durability guarantee, is realized); no ADR needed for either.
-- Next workflow step: this delta evidence (STATUS.md + ACCEPTANCE.md + the F-S4-02 finding's second narrow-re-review
-  section + CI link, once available) goes to the product owner to relay back to the ChatGPT Reviewer, who stated this
-  gate should close without another broad review once the render-priority fix lands. No further Sprint 4
-  implementation changes are planned unless the Reviewer finds another defect. Sprint 4 is not tagged until that
-  gate closes.
+  durability guarantee, is realized); no ADR needed for either. All resolved and accepted.
+- **Sprint 4 is ACCEPTED and CLOSED.** The Reviewer's final verdict ("SPRINT 4 IMPLEMENTATION GATE PASS — ACCEPTED")
+  closed all three F-S4-02 rounds as one resolved finding and reaffirmed every documented waiver/gap above (rows
+  19–26) as non-blocking. Next: Antigravity (Planner) plans Sprint 5 — Assignments & Database-Level Scheduling; the
+  Executor does not begin Sprint 5 implementation until that plan clears the Reviewer gate.

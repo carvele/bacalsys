@@ -1,8 +1,10 @@
 # Sprint 4: Workout Player & Durable SQLite Offline Outbox — engineering status
 
-> **Status: F-S4-02 SECOND NARROW RE-REVIEW FIX COMPLETE — READY FOR RE-REVIEW.** Not yet accepted; no tag. Per the standing
-> workflow, the Executor never self-approves. This report and [ACCEPTANCE.md](ACCEPTANCE.md) are the evidence package
-> for the ChatGPT Reviewer's implementation/evidence acceptance review.
+> **Status: ACCEPTED.** Tag `sprint-04-accepted`. The ChatGPT Reviewer's implementation/evidence acceptance gate
+> verdict, relayed by the product owner: **"SPRINT 4 IMPLEMENTATION GATE PASS — ACCEPTED"**, confirming the final
+> F-S4-02 integration defect (render-priority) is resolved and independently verifying commits `611ef49`/`4a0101d`
+> and CI runs `36333900397`/`36334082522` green. This report and [ACCEPTANCE.md](ACCEPTANCE.md) are the accepted
+> evidence package.
 >
 > **Reviewer gate history:**
 > 1. Implementation submitted for review (commits through `435337c`).
@@ -29,11 +31,15 @@
 >    `null` on failure, `isAwaitingStart` also stays `true` — and `active.tsx` checked that (→ spinner) **before**
 >    checking whether a start error existed, so the error `<Notice>` was unreachable. The athlete saw an indefinite
 >    "Starting your workout…" spinner instead of the promised error.
-> 7. Fixed (commit below): the render-state priority was extracted into its own testable function,
->    `resolveWorkoutScreenState()` (`src/features/workouts/workout-screen-state.ts`), which checks a start error
->    **before** the spinner. `active.tsx` now renders that error (with a "Go back" action) instead of the spinner,
->    without ever re-invoking `start_workout_session`. 8 new Jest tests prove the full state-priority ordering;
->    mutation-tested against the original (spinner-first) order. See §2 (finding) and §3 (evidence).
+> 7. Fixed (commit `611ef49`, docs follow-up `4a0101d`): the render-state priority was extracted into its own
+>    testable function, `resolveWorkoutScreenState()` (`src/features/workouts/workout-screen-state.ts`), which
+>    checks a start error **before** the spinner. `active.tsx` now renders that error (with a "Go back" action)
+>    instead of the spinner, without ever re-invoking `start_workout_session`. 8 new Jest tests prove the full
+>    state-priority ordering; mutation-tested against the original (spinner-first) order. See §2 (finding) and §3
+>    (evidence).
+> 8. **Reviewer verdict: ACCEPTED.** All three F-S4-02 rounds close as one resolved finding: durable handshake
+>    persistence across restart, correct persist-before-ready ordering, and correct visible failure-state rendering.
+>    Sprint 4 is accepted and tagged `sprint-04-accepted`.
 
 - **Baseline:** Roadmap v1.2 (`implementation_plan.md`) Section 11 — Sprint 4 Ordered Engineering Backlog, Schemas &
   Acceptance Slices, Tasks 4.0–4.15.
