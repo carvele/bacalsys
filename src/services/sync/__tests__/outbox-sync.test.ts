@@ -24,6 +24,10 @@ describe('OfflineOutboxService (Task 4.10)', () => {
     onlineManager.setOnline(false);
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks(); // undoes any Date.now() spy from the F-S4-02 restart-simulation tests
+  });
+
   it('full offline -> reconnect -> offline again -> terminal bundle lifecycle produces exactly one session', async () => {
     const service = createOfflineOutboxService(webOutbox);
     await webOutbox.init();
@@ -160,5 +164,155 @@ describe('OfflineOutboxService (Task 4.10)', () => {
     const afterRetry = await service.pendingForSession('corr-3');
     expect(afterRetry[0].syncStatus).toBe('pending');
     expect(afterRetry[0].attemptCount).toBe(0);
+  });
+
+  // ---------------------------------------------------------------------------
+  // F-S4-02 (Reviewer gate rework): the server handshake (session_id +
+  // exercise_mapping) must survive an app/process restart, not just live in
+  // the OfflineOutboxService instance that first received it. These tests
+  // destroy the service (a fresh `createOfflineOutboxService(webOutbox)`, with
+  // NO shared in-memory state of its own) while keeping the SAME `webOutbox`
+  // backing store untouched — `webOutbox`'s in-memory maps stand in for
+  // on-disk durability here exactly as they do in every other test in this
+  // file; the point under test is that a brand-new service object, given only
+  // that same storage, can still resolve a pending dependent mutation.
+  // ---------------------------------------------------------------------------
+  it('F-S4-02: RECORD_SET recovers the durable handshake after the service is destroyed and recreated (process-restart simulation)', async () => {
+    let service = createOfflineOutboxService(webOutbox);
+    await webOutbox.init();
+
+    await service.enqueueGranular({
+      id: 'corr-5',
+      sessionCorrelationId: 'corr-5',
+      mutationType: 'START_SESSION',
+      entityId: 'version-1',
+      payload: { workout_version_id: 'version-1' },
+    });
+    await service.enqueueGranular({
+      id: 'set-5',
+      sessionCorrelationId: 'corr-5',
+      mutationType: 'RECORD_SET',
+      entityId: 'item-1',
+      payload: { workout_item_id: 'item-1', set_data: { set_number: 1, actual_reps: 10, is_completed: true } },
+    });
+
+    // Reconnect: START_SESSION succeeds (and — critically — its handshake is
+    // durably persisted, per the fix). The very next dispatch in the same
+    // pass, RECORD_SET, is where the process dies: simulated by having
+    // record_session_set itself fail this one time.
+    supabase.rpc.mockImplementation((fn: string) => {
+      if (fn === 'start_workout_session') {
+        return Promise.resolve({ data: { session_id: 'server-session-5', exercise_mapping: { 'item-1': 'session-exercise-5' } }, error: null });
+      }
+      if (fn === 'record_session_set') {
+        return Promise.reject(new Error('process killed mid-dispatch'));
+      }
+      return Promise.resolve({ data: null, error: new Error(`unexpected rpc ${fn}`) });
+    });
+    await service.processQueue();
+
+    expect(supabase.rpc).toHaveBeenCalledWith('start_workout_session', expect.objectContaining({ p_idempotency_key: 'corr-5' }));
+    let pending = await service.pendingForSession('corr-5');
+    expect(pending.find((m) => m.mutationType === 'START_SESSION')?.syncStatus).toBe('synced');
+    expect(pending.find((m) => m.mutationType === 'RECORD_SET')?.syncStatus).toBe('pending');
+    expect(pending.find((m) => m.mutationType === 'RECORD_SET')?.attemptCount).toBe(1);
+
+    // "Process restart": the old instance's subscription is torn down (as the
+    // real app would on shutdown) and a BRAND NEW service instance, no
+    // in-memory state of its own, is created against the same (still
+    // populated) durable storage and initialized exactly as app boot does.
+    service.dispose();
+    supabase.rpc.mockClear();
+    service = createOfflineOutboxService(webOutbox);
+    await service.initialize();
+    // A real restart takes far longer than the exponential backoff window;
+    // simulate that so this dispatch attempt isn't skipped as "not due yet".
+    jest.spyOn(Date, 'now').mockReturnValue(Date.now() + 60_000);
+
+    supabase.rpc.mockImplementation((fn: string) => {
+      if (fn === 'record_session_set') {
+        return Promise.resolve({ data: { set_id: 'set-id-5', set_number: 1 }, error: null });
+      }
+      return Promise.resolve({ data: null, error: new Error(`unexpected rpc ${fn}`) });
+    });
+    await service.processQueue();
+
+    // The recovered handshake resolved the set WITHOUT ever calling
+    // start_workout_session again (no duplicate session).
+    expect(supabase.rpc).not.toHaveBeenCalledWith('start_workout_session', expect.anything());
+    expect(supabase.rpc).toHaveBeenCalledWith(
+      'record_session_set',
+      expect.objectContaining({ p_session_id: 'server-session-5', p_session_exercise_id: 'session-exercise-5', p_idempotency_key: 'set-5' }),
+    );
+    pending = await service.pendingForSession('corr-5');
+    expect(pending.every((m) => m.syncStatus === 'synced')).toBe(true);
+    expect(pending.find((m) => m.mutationType === 'RECORD_SET')?.syncStatus).not.toBe('failed_permanent');
+
+    service.dispose();
+  });
+
+  it('F-S4-02: SUBSTITUTE_EXERCISE recovers the durable handshake after the service is destroyed and recreated', async () => {
+    let service = createOfflineOutboxService(webOutbox);
+    await webOutbox.init();
+
+    await service.enqueueGranular({
+      id: 'corr-6',
+      sessionCorrelationId: 'corr-6',
+      mutationType: 'START_SESSION',
+      entityId: 'version-1',
+      payload: { workout_version_id: 'version-1' },
+    });
+    await service.enqueueGranular({
+      id: 'sub-6',
+      sessionCorrelationId: 'corr-6',
+      mutationType: 'SUBSTITUTE_EXERCISE',
+      entityId: 'item-1',
+      payload: {
+        original_workout_item_id: 'item-1',
+        replacement_exercise_id: 'exercise-2',
+        performed_measurement_mode: 'reps',
+        reason_code: 'equipment_unavailable',
+      },
+    });
+
+    supabase.rpc.mockImplementation((fn: string) => {
+      if (fn === 'start_workout_session') {
+        return Promise.resolve({ data: { session_id: 'server-session-6', exercise_mapping: { 'item-1': 'session-exercise-6' } }, error: null });
+      }
+      if (fn === 'record_exercise_substitution') {
+        return Promise.reject(new Error('process killed mid-dispatch'));
+      }
+      return Promise.resolve({ data: null, error: new Error(`unexpected rpc ${fn}`) });
+    });
+    await service.processQueue();
+
+    let pending = await service.pendingForSession('corr-6');
+    expect(pending.find((m) => m.mutationType === 'START_SESSION')?.syncStatus).toBe('synced');
+    expect(pending.find((m) => m.mutationType === 'SUBSTITUTE_EXERCISE')?.syncStatus).toBe('pending');
+
+    // "Process restart".
+    service.dispose();
+    supabase.rpc.mockClear();
+    service = createOfflineOutboxService(webOutbox);
+    await service.initialize();
+    jest.spyOn(Date, 'now').mockReturnValue(Date.now() + 60_000);
+
+    supabase.rpc.mockImplementation((fn: string) => {
+      if (fn === 'record_exercise_substitution') {
+        return Promise.resolve({ data: { status: 'substituted', session_id: 'server-session-6' }, error: null });
+      }
+      return Promise.resolve({ data: null, error: new Error(`unexpected rpc ${fn}`) });
+    });
+    await service.processQueue();
+
+    expect(supabase.rpc).not.toHaveBeenCalledWith('start_workout_session', expect.anything());
+    expect(supabase.rpc).toHaveBeenCalledWith(
+      'record_exercise_substitution',
+      expect.objectContaining({ p_session_id: 'server-session-6', p_idempotency_key: 'sub-6' }),
+    );
+    pending = await service.pendingForSession('corr-6');
+    expect(pending.every((m) => m.syncStatus === 'synced')).toBe(true);
+
+    service.dispose();
   });
 });

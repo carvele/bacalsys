@@ -1,8 +1,21 @@
 # Sprint 4: Workout Player & Durable SQLite Offline Outbox — engineering status
 
-> **Status: IMPLEMENTATION COMPLETE — READY FOR REVIEWER GATE.** Not yet accepted; no tag. Per the standing workflow,
-> the Executor never self-approves. This report and [ACCEPTANCE.md](ACCEPTANCE.md) are the evidence package for the
+> **Status: F-S4-02 REWORK COMPLETE — READY FOR RE-REVIEW.** Not yet accepted; no tag. Per the standing workflow, the
+> Executor never self-approves. This report and [ACCEPTANCE.md](ACCEPTANCE.md) are the evidence package for the
 > ChatGPT Reviewer's implementation/evidence acceptance review.
+>
+> **Reviewer gate history:**
+> 1. Implementation submitted for review (commits through `435337c`).
+> 2. Reviewer verdict: **FAIL — targeted rework required.** F-S4-02: the offline outbox's server handshake
+>    (`session_id` + `exercise_mapping`) was held only in an in-process `Map`, not durably persisted — a `RECORD_SET`
+>    or `SUBSTITUTE_EXERCISE` mutation still `pending` after its session's `START_SESSION` row had already synced
+>    could not recover across an app/process restart, eventually dead-lettering. Section 11 architecture, F-S4-01,
+>    F-S4-P13, F-S4-P14, permissions, RLS and server mutation semantics were explicitly NOT reopened, and were not
+>    touched by this fix.
+> 3. F-S4-02 fixed: the handshake is now part of the durable `OutboxStorage` contract itself (`session_handshakes` —
+>    a SQLite table / a second IndexedDB store), never an in-process cache. Two new Jest tests reproduce the
+>    Reviewer's exact restart scenario; a mutation-testing pass confirmed they fail against the original bug and pass
+>    against the fix. See §2 (finding) and §3 (evidence).
 
 - **Baseline:** Roadmap v1.2 (`implementation_plan.md`) Section 11 — Sprint 4 Ordered Engineering Backlog, Schemas &
   Acceptance Slices, Tasks 4.0–4.15.
@@ -25,13 +38,14 @@
 | 4.6 pgTAP schema/RLS/redaction/idempotency suite | ✅ | `supabase/tests/011_workout_sessions_schema.test.sql`, **35** assertions |
 | 4.7 pgTAP RPC/locking/F-S4-P14/offline suite | ✅ | `supabase/tests/012_workout_execution_and_outbox.test.sql`, **30** assertions |
 | 4.8 Hosted Execution Acceptance Slice 1 | ✅ | §6: **18/18** |
-| 4.9 Local SQLite & web outbox | ✅ | `src/services/storage/{outbox-types,sqlite-outbox,web-outbox,outbox-storage(.web)}.ts` |
-| 4.10 OfflineOutboxService & sync bridge | ✅ | `src/services/sync/outbox-sync.ts`; Jest acceptance test (§4) |
+| 4.9 Local SQLite & web outbox | ✅ | `src/services/storage/{outbox-types,sqlite-outbox,web-outbox,outbox-storage(.web)}.ts`, incl. the F-S4-02 durable `session_handshakes` store |
+| 4.10 OfflineOutboxService & sync bridge | ✅ | `src/services/sync/outbox-sync.ts`; Jest acceptance + F-S4-02 restart-recovery tests (§3) |
 | 4.11 Rest timer hook | ✅ | `src/hooks/useRestTimer.ts`; synthesized chime asset (`scripts/assets/generate-rest-chime.mjs`) |
 | 4.12 Substitution modal | ✅ | `src/components/ExerciseSubstitutionModal.tsx` |
 | 4.13 Interactive Workout Player | ✅ | `src/app/(athlete)/workout/active.tsx` |
 | 4.14 Summary & split feedback | ✅ | `src/app/(athlete)/workout/summary.tsx` |
 | 4.15 Concurrency probes + hosted Slice 2 + regression + Android boot + this report | ✅ | §7, §8, §3, §11 |
+| Reviewer gate rework (F-S4-02) | ✅ | `outbox-types.ts`/`sqlite-outbox.ts`/`web-outbox.ts`/`outbox-sync.ts`; see §2 and §3 |
 
 ## 2. Findings
 
@@ -41,23 +55,35 @@
   hosted apply** — never a separate remediation migration, unlike F-S3-02/03/04 which were found across two
   submissions. `app_private.validate_session_set` and the client mirror already enforced the equivalent rule
   correctly, so no runtime data was ever at risk.
+- **[F-S4-02](findings/F-S4-02-outbox-handshake-not-durable-across-restart.md)** (Bug, High — Reviewer implementation-
+  acceptance gate) — the offline outbox's server handshake (`session_id` + `exercise_mapping`) was held only in an
+  in-process `Map`, not durably persisted; a queued `RECORD_SET` / `SUBSTITUTE_EXERCISE` mutation still `pending`
+  after its session's `START_SESSION` row had already synced could not recover across an app/process restart and
+  would eventually dead-letter. Fixed by making the handshake part of the durable `OutboxStorage` contract itself
+  (a `session_handshakes` SQLite table / second IndexedDB store), never an in-process cache. Section 11 architecture,
+  F-S4-01, F-S4-P13, F-S4-P14, permissions, RLS and server mutation semantics were not touched.
 
-No ADR was needed: F-S4-01 is an implementation correction to how the frozen Section 11 requirement is realized, not
-a behavior or scope change — same classification as its Sprint 3 counterpart.
+No ADR was needed for either finding: both are implementation corrections to how the frozen Section 11 requirement
+and the client's own stated durability guarantee are realized, not behavior or scope changes.
 
 ## 3. Offline verification
 
-`npm run verify` (typecheck + lint + Jest + `test:scripts` + `db:verify`):
+`npm run verify` (typecheck + lint + Jest + `test:scripts` + `db:verify`), after the F-S4-02 fix:
 
 ```
 Typecheck:  0 errors
 Lint:       0 errors, 0 warnings
-Jest:       8 suites, 93 tests passed (+23 new: session-player.test.ts 20, outbox-sync.test.ts 3)
-db:verify:  12 files, 508 assertions, 0 failed
+Jest:       8 suites, 95 tests passed (+25 new: session-player.test.ts 20, outbox-sync.test.ts 5 [3 original + 2 F-S4-02 recovery tests])
+db:verify:  12 files, 508 assertions, 0 failed (unaffected — F-S4-02 is a client-only fix, no migration/SQL changed)
 ```
 
 `db:verify` file breakdown: `001`–`010` (Sprints 1–3, unchanged, 443 total) + `011_workout_sessions_schema` (35) +
 `012_workout_execution_and_outbox` (30) = 508.
+
+A mutation-testing pass (temporarily reverting `persistHandshake`/`getHandshake` in `outbox-sync.ts` back to an
+in-process `Map`, i.e. exactly the original bug) confirmed the two new F-S4-02 tests fail against the reverted code
+with precisely the Reviewer's described symptom, and pass again once the fix is restored — the regression tests are
+real, not tautologies.
 
 The `outbox-sync.test.ts` suite includes the Section 11 acceptance scenario verbatim: offline start → offline
 `RECORD_SET` → reconnect (`processQueue()`) → `START_SESSION` dispatches first and hands back the `session_id` +
@@ -76,12 +102,15 @@ unresolved `START_SESSION`); a third proves the 5-attempt dead-letter threshold 
   (substitutions/logged sets keyed by the immutable `workout_item_id`, never a server-generated
   `session_exercise_id`) across the active-workout and summary screens, since Expo Router unmounts a screen on
   navigation. See §9's scope note on what this does and does not persist.
-- `src/services/storage/` — `outbox-types.ts` (shared shape), `sqlite-outbox.ts` (native, `expo-sqlite`),
-  `web-outbox.ts` (web, IndexedDB; an in-memory adapter strictly under `NODE_ENV === 'test'`), `outbox-storage.ts` /
+- `src/services/storage/` — `outbox-types.ts` (shared shape, incl. `SessionHandshake` and the
+  `saveHandshake`/`getHandshake` contract added by F-S4-02), `sqlite-outbox.ts` (native, `expo-sqlite`; the
+  `offline_mutations` table plus a `session_handshakes` table), `web-outbox.ts` (web, IndexedDB with a second
+  `session_handshakes` object store; an in-memory adapter strictly under `NODE_ENV === 'test'`), `outbox-storage.ts` /
   `outbox-storage.web.ts` (Metro platform selection, matching the existing `auth-storage.ts`/`.web.ts` convention).
 - `src/services/sync/outbox-sync.ts` — `OfflineOutboxService`: FIFO-per-session dispatch with causal-dependency
-  blocking, exponential backoff, 5-attempt dead-letter + manual retry, the online-start reconnection handshake, and
-  terminal `SYNC_BUNDLE` coalescence. **3 Jest tests**, including the full Section 11 acceptance scenario (§3).
+  blocking, exponential backoff, 5-attempt dead-letter + manual retry, the online-start reconnection handshake
+  (**F-S4-02: durably persisted, never an in-process cache**), and terminal `SYNC_BUNDLE` coalescence. **5 Jest
+  tests** (3 original + 2 F-S4-02 restart-recovery tests), including the full Section 11 acceptance scenario (§3).
 - `src/hooks/useRestTimer.ts` — absolute wall-clock `restEndsAt`, recalculated on every `AppState` foreground
   transition (never a decrementing counter); foreground chime (`expo-audio`, a synthesized two-tone WAV generated by
   `scripts/assets/generate-rest-chime.mjs` — no third-party audio asset needed) + haptic (`expo-haptics`); a
@@ -171,9 +200,13 @@ left open:
   online, and online-start-then-offline-through-completion — are both covered without this gap (§6, §7); a session
   that alternates connectivity mid-workout is **not** exercised by either hosted slice and is called out explicitly
   as untested below, not silently assumed correct.
-- **In-memory session draft**: `session-store.ts` does not persist across an app process kill. The durable outbox
-  rows it may have already enqueued survive on disk and still sync once the app reopens; only the athlete's own
-  local view of an in-progress session (and any not-yet-submitted set they were mid-typing) is not recovered. Full
+- **In-memory session draft**: `session-store.ts` (the athlete-facing UI draft: which exercises are on screen, what's
+  been typed) does not persist across an app process kill — that remains unchanged and out of scope for this sprint.
+  This is a **different** thing from the outbox's own server *handshake*, which — per the F-S4-02 fix — now IS
+  durable across a restart precisely so the already-enqueued outbox rows it survives alongside can actually finish
+  syncing; before that fix, this bullet's claim about outbox rows was not reliably true (see F-S4-02). Only the
+  athlete's local view of an in-progress session (and any not-yet-submitted set they were mid-typing) is not
+  recovered. Full
   app-relaunch mid-session recovery was judged out of scope for this sprint (see §11).
 - **Circuit/AMRAP player pacing**: the player presents each prescribed item's sets in block/item order and lets the
   athlete log actual sets freely (any `set_number`, matching or not the prescribed count); it does not auto-repeat a
@@ -233,6 +266,13 @@ left open:
 
 ## 13. What was not verified
 
+- **F-S4-02 hosted recovery probe**: not applicable / not performed. The defect and its fix are entirely about
+  client-local storage surviving an app/process restart; the hosted RPC-only E2E script has no local outbox of its
+  own to restart, and the server-side behavior it would otherwise exercise (idempotent `start_workout_session`,
+  correct `record_session_set` resolution given a valid `session_id`) was never the problem and is already covered
+  by Slice 1 and the concurrency probes. See F-S4-02's finding doc "Evidentiary note" for the full reasoning. The two
+  new Jest tests, exercising the real `OutboxStorage` contract through a destroyed and recreated service instance,
+  are the correct evidentiary tier for this guarantee.
 - **`supabase test db` / local Docker stack**: unavailable in this environment (same waiver as Sprints 1–3).
 - **Signed-in UI click-through**: not performed by the Executor; pending the product owner.
 - **Hosted fixture cleanup**: the Sprint 4 tagged fixture accounts (6 profiles + 1 organization) were not removed

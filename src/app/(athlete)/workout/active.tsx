@@ -106,7 +106,9 @@ export default function ActiveWorkoutScreen() {
         } else {
           const result = data as { session_id: string; exercise_mapping: Record<string, string> };
           setSessionId(result.session_id, result.exercise_mapping ?? {});
-          offlineOutboxService.persistHandshake(correlationId, {
+          // F-S4-02: awaited so the handshake is durably persisted before this
+          // effect considers the session "ready" for further actions.
+          await offlineOutboxService.persistHandshake(correlationId, {
             sessionId: result.session_id,
             exerciseMapping: result.exercise_mapping ?? {},
           });

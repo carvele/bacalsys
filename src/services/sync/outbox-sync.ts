@@ -6,7 +6,14 @@ import { randomId } from '@/lib/random-id';
 import { supabase } from '@/lib/supabase';
 
 import { outboxStorage } from '../storage/outbox-storage';
-import { MAX_SYNC_ATTEMPTS, type MutationType, type NewOfflineMutation, type OfflineMutation, type OutboxStorage } from '../storage/outbox-types';
+import {
+  MAX_SYNC_ATTEMPTS,
+  type MutationType,
+  type NewOfflineMutation,
+  type OfflineMutation,
+  type OutboxStorage,
+  type SessionHandshake,
+} from '../storage/outbox-types';
 
 /**
  * Sprint 4 · Task 4.10 — OfflineOutboxService.
@@ -43,26 +50,29 @@ const isDueForRetry = (m: OfflineMutation) => {
   return Date.now() - new Date(m.lastAttemptAt).getTime() >= backoffMs;
 };
 
-export interface SessionHandshake {
-  sessionId: string;
-  /** workout_item_id -> session_exercise_id, from start_workout_session's response. */
-  exerciseMapping: Record<string, string>;
-}
+export type { SessionHandshake };
 
 export function createOfflineOutboxService(storage: OutboxStorage = outboxStorage) {
   let processing = false;
   let unsubscribeOnline: (() => void) | null = null;
-  const handshakes = new Map<string, SessionHandshake>();
   const listeners = new Set<() => void>();
 
   const notify = () => listeners.forEach((l) => l());
 
-  /** Called by the session hook whenever a session_id + exercise_mapping becomes known (online start, or a replayed offline START_SESSION). */
-  function persistHandshake(sessionCorrelationId: string, handshake: SessionHandshake) {
-    handshakes.set(sessionCorrelationId, handshake);
+  /**
+   * Called by the session hook whenever a session_id + exercise_mapping
+   * becomes known (online start, or a replayed offline START_SESSION).
+   *
+   * F-S4-02: writes straight through to durable storage — never an
+   * in-process cache — so a `RECORD_SET` / `SUBSTITUTE_EXERCISE` mutation
+   * still `pending` long after this session's `START_SESSION` row has
+   * already synced can still resolve it after an app/process restart.
+   */
+  async function persistHandshake(sessionCorrelationId: string, handshake: SessionHandshake) {
+    await storage.saveHandshake(sessionCorrelationId, handshake);
   }
-  function getHandshake(sessionCorrelationId: string) {
-    return handshakes.get(sessionCorrelationId);
+  async function getHandshake(sessionCorrelationId: string) {
+    return storage.getHandshake(sessionCorrelationId);
   }
 
   async function initialize() {
@@ -107,10 +117,16 @@ export function createOfflineOutboxService(storage: OutboxStorage = outboxStorag
     if (onlineManager.isOnline()) void processQueue();
   }
 
-  function resolveSessionId(mutation: OfflineMutation): string | null {
+  /**
+   * F-S4-02: resolves via durable storage, never an in-process cache, so this
+   * works identically whether the handshake was written by THIS service
+   * instance or a prior one that has since been destroyed (app restart).
+   */
+  async function resolveSessionId(mutation: OfflineMutation): Promise<string | null> {
     const payload = mutation.payload as Record<string, unknown>;
     if (typeof payload.session_id === 'string') return payload.session_id;
-    return getHandshake(mutation.sessionCorrelationId)?.sessionId ?? null;
+    const handshake = await getHandshake(mutation.sessionCorrelationId);
+    return handshake?.sessionId ?? null;
   }
 
   async function dispatchOne(mutation: OfflineMutation): Promise<{ ok: true } | { ok: false; error: string }> {
@@ -124,14 +140,17 @@ export function createOfflineOutboxService(storage: OutboxStorage = outboxStorag
           });
           if (error) throw error;
           const result = data as { session_id: string; exercise_mapping: Record<string, string> };
-          persistHandshake(mutation.sessionCorrelationId, {
+          // Durably persisted BEFORE this mutation is ever marked 'synced' (below,
+          // by the caller) — a crash between these two writes must never leave a
+          // 'synced' START_SESSION with no recoverable handshake (F-S4-02).
+          await persistHandshake(mutation.sessionCorrelationId, {
             sessionId: result.session_id,
             exerciseMapping: result.exercise_mapping ?? {},
           });
           return { ok: true };
         }
         case 'SUBSTITUTE_EXERCISE': {
-          const sessionId = resolveSessionId(mutation);
+          const sessionId = await resolveSessionId(mutation);
           if (!sessionId) return { ok: false, error: 'Waiting for the session to sync first.' };
           const payload = mutation.payload as {
             original_workout_item_id: string;
@@ -151,10 +170,11 @@ export function createOfflineOutboxService(storage: OutboxStorage = outboxStorag
           return { ok: true };
         }
         case 'RECORD_SET': {
-          const sessionId = resolveSessionId(mutation);
+          const sessionId = await resolveSessionId(mutation);
           if (!sessionId) return { ok: false, error: 'Waiting for the session to sync first.' };
           const payload = mutation.payload as { workout_item_id: string; set_data: Json };
-          const sessionExerciseId = getHandshake(mutation.sessionCorrelationId)?.exerciseMapping[payload.workout_item_id];
+          const handshake = await getHandshake(mutation.sessionCorrelationId);
+          const sessionExerciseId = handshake?.exerciseMapping[payload.workout_item_id];
           if (!sessionExerciseId) return { ok: false, error: 'Waiting for the exercise mapping to sync first.' };
           const { error } = await supabase.rpc('record_session_set', {
             p_session_id: sessionId,
@@ -177,7 +197,7 @@ export function createOfflineOutboxService(storage: OutboxStorage = outboxStorag
           // Never enqueued directly by the client (a terminal transition while
           // offline always produces a SYNC_BUNDLE instead); handled here only
           // for schema symmetry / defensive completeness.
-          const sessionId = resolveSessionId(mutation);
+          const sessionId = await resolveSessionId(mutation);
           if (!sessionId) return { ok: false, error: 'Waiting for the session to sync first.' };
           const payload = mutation.payload as {
             status: 'completed' | 'abandoned';

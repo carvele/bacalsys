@@ -1,5 +1,5 @@
 import { MAX_SYNC_ATTEMPTS } from './outbox-types';
-import type { NewOfflineMutation, OfflineMutation, OutboxStorage } from './outbox-types';
+import type { NewOfflineMutation, OfflineMutation, OutboxStorage, SessionHandshake } from './outbox-types';
 
 /**
  * Sprint 4 · Task 4.9. Web durable outbox: IndexedDB (persistent across
@@ -8,19 +8,31 @@ import type { NewOfflineMutation, OfflineMutation, OutboxStorage } from './outbo
  * module is never used to back a production build's persistence, only its
  * own unit tests. Selected on web by Metro's `.web.ts` resolution via
  * `outbox-storage.web.ts`.
+ *
+ * F-S4-02: `session_handshakes` is a second, independent object store (and,
+ * under Jest, a second in-memory map) — the server handshake for a session
+ * must survive exactly as durably as its outbox rows do, and independently of
+ * the in-process `OfflineOutboxService` instance that first received it.
  */
 const DB_NAME = 'bacalsys_offline';
-const STORE = 'offline_mutations';
-const DB_VERSION = 1;
+const MUTATIONS_STORE = 'offline_mutations';
+const HANDSHAKES_STORE = 'session_handshakes';
+const DB_VERSION = 2;
 const isTestEnv = process.env.NODE_ENV === 'test';
+
+interface HandshakeRecord extends SessionHandshake {
+  sessionCorrelationId: string;
+}
 
 // ---------------------------------------------------------------------------
 // In-memory adapter (Jest only).
 // ---------------------------------------------------------------------------
 let memoryStore = new Map<string, OfflineMutation>();
-/** Test-only: clears the in-memory store between test cases. */
+let memoryHandshakes = new Map<string, SessionHandshake>();
+/** Test-only: clears the in-memory stores between test cases. */
 export function __resetInMemoryOutboxForTests() {
   memoryStore = new Map();
+  memoryHandshakes = new Map();
 }
 
 // ---------------------------------------------------------------------------
@@ -31,8 +43,11 @@ function openDb(): Promise<IDBDatabase> {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = () => {
       const database = request.result;
-      if (!database.objectStoreNames.contains(STORE)) {
-        database.createObjectStore(STORE, { keyPath: 'id' });
+      if (!database.objectStoreNames.contains(MUTATIONS_STORE)) {
+        database.createObjectStore(MUTATIONS_STORE, { keyPath: 'id' });
+      }
+      if (!database.objectStoreNames.contains(HANDSHAKES_STORE)) {
+        database.createObjectStore(HANDSHAKES_STORE, { keyPath: 'sessionCorrelationId' });
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -40,12 +55,12 @@ function openDb(): Promise<IDBDatabase> {
   });
 }
 
-function withStore<T>(mode: IDBTransactionMode, fn: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
+function withStore<T>(storeName: string, mode: IDBTransactionMode, fn: (store: IDBObjectStore) => IDBRequest<T>): Promise<T> {
   return openDb().then(
     (database) =>
       new Promise<T>((resolve, reject) => {
-        const tx = database.transaction(STORE, mode);
-        const request = fn(tx.objectStore(STORE));
+        const tx = database.transaction(storeName, mode);
+        const request = fn(tx.objectStore(storeName));
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error ?? new Error('Offline outbox request failed'));
       }),
@@ -54,7 +69,7 @@ function withStore<T>(mode: IDBTransactionMode, fn: (store: IDBObjectStore) => I
 
 async function getAll(): Promise<OfflineMutation[]> {
   if (isTestEnv) return [...memoryStore.values()];
-  return withStore('readonly', (store) => store.getAll());
+  return withStore(MUTATIONS_STORE, 'readonly', (store) => store.getAll());
 }
 
 async function put(mutation: OfflineMutation): Promise<void> {
@@ -62,12 +77,12 @@ async function put(mutation: OfflineMutation): Promise<void> {
     memoryStore.set(mutation.id, mutation);
     return;
   }
-  await withStore('readwrite', (store) => store.put(mutation));
+  await withStore(MUTATIONS_STORE, 'readwrite', (store) => store.put(mutation));
 }
 
 async function getOne(id: string): Promise<OfflineMutation | undefined> {
   if (isTestEnv) return memoryStore.get(id);
-  return withStore('readonly', (store) => store.get(id));
+  return withStore(MUTATIONS_STORE, 'readonly', (store) => store.get(id));
 }
 
 const sortForQueue = (a: OfflineMutation, b: OfflineMutation) =>
@@ -138,5 +153,23 @@ export const webOutbox: OutboxStorage = {
     const m = await getOne(id);
     if (!m) return;
     await put({ ...m, syncStatus: 'pending', attemptCount: 0, lastError: null });
+  },
+
+  async saveHandshake(sessionCorrelationId, handshake) {
+    if (isTestEnv) {
+      memoryHandshakes.set(sessionCorrelationId, handshake);
+      return;
+    }
+    const record: HandshakeRecord = { sessionCorrelationId, ...handshake };
+    await withStore(HANDSHAKES_STORE, 'readwrite', (store) => store.put(record));
+  },
+
+  async getHandshake(sessionCorrelationId) {
+    if (isTestEnv) return memoryHandshakes.get(sessionCorrelationId) ?? null;
+    const record = await withStore<HandshakeRecord | undefined>(HANDSHAKES_STORE, 'readonly', (store) =>
+      store.get(sessionCorrelationId),
+    );
+    if (!record) return null;
+    return { sessionId: record.sessionId, exerciseMapping: record.exerciseMapping };
   },
 };

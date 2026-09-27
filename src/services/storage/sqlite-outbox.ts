@@ -1,7 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 
 import { MAX_SYNC_ATTEMPTS } from './outbox-types';
-import type { NewOfflineMutation, OfflineMutation, OutboxStorage } from './outbox-types';
+import type { NewOfflineMutation, OfflineMutation, OutboxStorage, SessionHandshake } from './outbox-types';
 
 /**
  * Sprint 4 · Task 4.9. Native (iOS/Android) durable outbox: `expo-sqlite`
@@ -31,6 +31,16 @@ CREATE TABLE IF NOT EXISTS offline_mutations (
   sync_status TEXT NOT NULL CHECK (sync_status IN ('pending', 'syncing', 'synced', 'failed_permanent'))
 );
 CREATE INDEX IF NOT EXISTS idx_offline_mutations_queue ON offline_mutations (sync_status, created_at, id);
+
+-- F-S4-02: the server handshake (session_id + workout_item_id -> session_exercise_id
+-- mapping) must outlive the in-process service instance, since a dependent
+-- RECORD_SET / SUBSTITUTE_EXERCISE row can still be 'pending' long after this
+-- session's START_SESSION row has already synced.
+CREATE TABLE IF NOT EXISTS session_handshakes (
+  session_correlation_id TEXT PRIMARY KEY,
+  session_id TEXT NOT NULL,
+  exercise_mapping_json TEXT NOT NULL
+);
 `;
 
 interface Row {
@@ -140,5 +150,25 @@ export const sqliteOutbox: OutboxStorage = {
       `UPDATE offline_mutations SET sync_status = 'pending', attempt_count = 0, last_error = NULL WHERE id = ?`,
       [id],
     );
+  },
+
+  async saveHandshake(sessionCorrelationId, handshake) {
+    const database = await getDb();
+    await database.runAsync(
+      `INSERT INTO session_handshakes (session_correlation_id, session_id, exercise_mapping_json) VALUES (?, ?, ?)
+       ON CONFLICT (session_correlation_id) DO UPDATE SET session_id = excluded.session_id, exercise_mapping_json = excluded.exercise_mapping_json`,
+      [sessionCorrelationId, handshake.sessionId, JSON.stringify(handshake.exerciseMapping)],
+    );
+  },
+
+  async getHandshake(sessionCorrelationId) {
+    const database = await getDb();
+    const row = await database.getFirstAsync<{ session_id: string; exercise_mapping_json: string }>(
+      `SELECT session_id, exercise_mapping_json FROM session_handshakes WHERE session_correlation_id = ?`,
+      [sessionCorrelationId],
+    );
+    if (!row) return null;
+    const handshake: SessionHandshake = { sessionId: row.session_id, exerciseMapping: JSON.parse(row.exercise_mapping_json) };
+    return handshake;
   },
 };

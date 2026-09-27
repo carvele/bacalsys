@@ -40,6 +40,23 @@ export type NewOfflineMutation = Pick<
 >;
 
 /**
+ * The server identity a session acquires once `start_workout_session`
+ * resolves (online, or via a replayed offline `START_SESSION`): its real
+ * `session_id`, and the `workout_item_id -> session_exercise_id` mapping
+ * every subsequent `RECORD_SET` needs to resolve `p_session_exercise_id`.
+ *
+ * F-S4-02 (Reviewer gate rework): this MUST be durable, not merely held in an
+ * in-process `Map` — a `RECORD_SET` or `SUBSTITUTE_EXERCISE` mutation can
+ * still be `pending` in `offline_mutations` long after its session's
+ * `START_SESSION` row has already synced and been marked `synced`, so an
+ * app-process restart has no other way to recover it.
+ */
+export interface SessionHandshake {
+  sessionId: string;
+  exerciseMapping: Record<string, string>;
+}
+
+/**
  * Durable outbox journal. `init()` must be called once before any other
  * method (it creates the schema; it does NOT itself perform stale-syncing
  * recovery — that is an explicit OfflineOutboxService.initialize() step so
@@ -61,4 +78,12 @@ export interface OutboxStorage {
   markSessionSynced(sessionCorrelationId: string): Promise<void>;
   /** Manual retry (dead-letter UI action): failed_permanent -> pending, attempt_count reset. */
   retry(id: string): Promise<void>;
+  /**
+   * F-S4-02: durably records the server handshake for a session, keyed by
+   * `session_correlation_id`, so it survives an app/process restart —
+   * upserts (a session has exactly one handshake, written once).
+   */
+  saveHandshake(sessionCorrelationId: string, handshake: SessionHandshake): Promise<void>;
+  /** F-S4-02: reads the durable handshake back, or null if this session never got one (still fully offline, or never started). */
+  getHandshake(sessionCorrelationId: string): Promise<SessionHandshake | null>;
 }
