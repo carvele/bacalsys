@@ -131,7 +131,22 @@ pre-existing `authenticated_security_definer_function_executable` warnings are S
 design — every one is an authenticated public wrapper); the `unused_index` INFO items are expected pre-traffic noise
 on newly created indexes (including the 6 new Sprint 3 indexes) and are not acted on.
 
-## 9. What was not verified
+## 9. Deployment & signed-in click-through
+
+- Commit [`da8927f`](https://github.com/carvele/bacalsys/commit/da8927f) pushed to `main`.
+- CI [run 36311916865](https://github.com/carvele/bacalsys/actions/runs/36311916865): **green** — typecheck, lint,
+  Jest, `test:scripts`, `db:verify`, then build & deploy to GitHub Pages.
+- Signed-in UI click-through performed by the product owner against the deployed build. Reported result: **all
+  steps passed** —
+  1. Coach creates a routine (block/exercise/set builder), saves it private or club-visible.
+  2. Coach publishes a new version of that routine with a changelog note.
+  3. A member with access clones a routine into their own private library.
+  4. Creator/VP/President toggles a private routine to club-visible and back, edits its name/description,
+     archives/unarchives it.
+  5. Athlete browses "My routines" vs "Club templates" and opens a routine's detail to see the full prescribed
+     block/exercise/set breakdown.
+
+## 10. What was not verified
 
 - **`supabase test db` / local Docker stack**: unavailable in this environment (same waiver as Sprints 1–2).
 - **Signed-in UI click-through**: not performed by the Executor (credential-entry rule); pending the product owner.
