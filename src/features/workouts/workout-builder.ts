@@ -133,8 +133,16 @@ export function addBackOffSet(item: ItemDraft): ItemDraft {
 
 export interface DraftErrors {
   name?: string;
+  /** The workout-wide total-sets cap (F-S3-03: 150), independent of any single block or item. */
+  totalSets?: string;
   blocks?: Record<number, { title?: string; structure?: string; items?: Record<number, { exercise?: string; mode?: string; sets?: Record<number, string> }> }>;
 }
+
+/** Frozen payload limits (F-S3-03), mirrored from app_private.build_workout_version. */
+export const MAX_BLOCKS = 20;
+export const MAX_ITEMS_PER_BLOCK = 15;
+export const MAX_SETS_PER_ITEM = 30;
+export const MAX_TOTAL_SETS = 150;
 
 const toNumber = (s: string) => (s.trim() === '' ? null : Number(s));
 
@@ -196,9 +204,14 @@ export function validateDraft(name: string, blocks: BlockDraft[]): DraftErrors {
   if (!trimmedName) errors.name = 'Give the routine a name.';
   else if (trimmedName.length > 100) errors.name = 'Keep the name under 100 characters.';
 
-  if (blocks.length < 1 || blocks.length > 20) {
-    errors.blocks = { 0: { structure: 'A routine needs between 1 and 20 blocks.' } };
+  if (blocks.length < 1 || blocks.length > MAX_BLOCKS) {
+    errors.blocks = { 0: { structure: `A routine needs between 1 and ${MAX_BLOCKS} blocks.` } };
     return errors;
+  }
+
+  const totalSets = blocks.reduce((n, b) => n + b.items.reduce((m, it) => m + it.sets.length, 0), 0);
+  if (totalSets > MAX_TOTAL_SETS) {
+    errors.totalSets = `A routine can have at most ${MAX_TOTAL_SETS} sets in total (currently ${totalSets}).`;
   }
 
   const blockErrors: DraftErrors['blocks'] = {};
@@ -211,8 +224,10 @@ export function validateDraft(name: string, blocks: BlockDraft[]): DraftErrors {
     if (b.blockType === 'circuit' && (toNumber(b.circuitRounds) ?? 0) < 1) {
       be.structure = 'A circuit block needs at least 1 round.';
     }
-    if (b.items.length < 1 || b.items.length > 30) {
-      be.structure = 'A block needs between 1 and 30 exercises.';
+    if (b.items.length < 1 || b.items.length > MAX_ITEMS_PER_BLOCK) {
+      be.structure = `A block needs between 1 and ${MAX_ITEMS_PER_BLOCK} exercises.`;
+    } else if ((b.blockType === 'superset' || b.blockType === 'circuit') && b.items.length < 2 && !be.structure) {
+      be.structure = `A ${labelFor(b.blockType).toLowerCase()} block needs at least 2 exercises.`;
     }
 
     const itemErrors: Record<number, { exercise?: string; mode?: string; sets?: Record<number, string> }> = {};
@@ -220,7 +235,9 @@ export function validateDraft(name: string, blocks: BlockDraft[]): DraftErrors {
       const ie: { exercise?: string; mode?: string; sets?: Record<number, string> } = {};
       if (!it.exerciseId) ie.exercise = 'Choose an exercise.';
       if (!it.measurementMode) ie.mode = 'Choose a measurement mode.';
-      if (it.sets.length < 1 || it.sets.length > 50) ie.mode = 'A movement needs between 1 and 50 sets.';
+      if (it.sets.length < 1 || it.sets.length > MAX_SETS_PER_ITEM) {
+        ie.mode = `A movement needs between 1 and ${MAX_SETS_PER_ITEM} sets.`;
+      }
       if (it.measurementMode) {
         const setErrors: Record<number, string> = {};
         it.sets.forEach((s, si) => {
@@ -240,7 +257,7 @@ export function validateDraft(name: string, blocks: BlockDraft[]): DraftErrors {
   return errors;
 }
 
-export const isDraftValid = (errors: DraftErrors) => !errors.name && !errors.blocks;
+export const isDraftValid = (errors: DraftErrors) => !errors.name && !errors.totalSets && !errors.blocks;
 
 /** Builds the `p_blocks` jsonb payload the RPCs expect. Array order becomes order_in_workout / order_in_block / set_number. */
 export function buildBlocksPayload(blocks: BlockDraft[]): Json {

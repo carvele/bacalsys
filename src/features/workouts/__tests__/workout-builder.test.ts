@@ -109,6 +109,69 @@ describe('validateDraft', () => {
   it('rejects zero blocks', () => {
     expect(validateDraft('Day', []).blocks?.[0]?.structure).toMatch(/1 and 20 blocks/);
   });
+
+  // F-S3-03 / F-S3-04 (reviewer gate rework): payload limits and compound-block
+  // cardinality, mirroring app_private.build_workout_version exactly.
+  const itemWithSets = (n: number) => ({
+    ...emptyItem(),
+    exerciseId: 'ex-1',
+    measurementMode: 'reps' as const,
+    sets: Array.from({ length: n }, () => setWith({ targetReps: '5' })),
+  });
+
+  it('rejects more than 15 items in a block (F-S3-03)', () => {
+    const block: BlockDraft = { ...emptyBlock(), title: 'x', items: Array.from({ length: 16 }, () => itemWithSets(1)) };
+    expect(validateDraft('Day', [block]).blocks?.[0]?.structure).toMatch(/1 and 15 exercises/);
+  });
+
+  it('accepts exactly 15 items in a block', () => {
+    const block: BlockDraft = { ...emptyBlock(), title: 'x', items: Array.from({ length: 15 }, () => itemWithSets(1)) };
+    expect(isDraftValid(validateDraft('Day', [block]))).toBe(true);
+  });
+
+  it('rejects more than 30 sets on one item (F-S3-03)', () => {
+    const block: BlockDraft = { ...emptyBlock(), title: 'x', items: [itemWithSets(31)] };
+    expect(validateDraft('Day', [block]).blocks?.[0]?.items?.[0]?.mode).toMatch(/1 and 30 sets/);
+  });
+
+  it('accepts exactly 30 sets on one item', () => {
+    const block: BlockDraft = { ...emptyBlock(), title: 'x', items: [itemWithSets(30)] };
+    expect(isDraftValid(validateDraft('Day', [block]))).toBe(true);
+  });
+
+  it('rejects more than 150 sets across the whole routine (F-S3-03)', () => {
+    const block: BlockDraft = { ...emptyBlock(), title: 'x', items: [itemWithSets(30), itemWithSets(30), itemWithSets(30), itemWithSets(30), itemWithSets(30), itemWithSets(1)] };
+    expect(validateDraft('Day', [block]).totalSets).toMatch(/150 sets/);
+  });
+
+  it('accepts exactly 150 sets across the whole routine', () => {
+    const block: BlockDraft = { ...emptyBlock(), title: 'x', items: [itemWithSets(30), itemWithSets(30), itemWithSets(30), itemWithSets(30), itemWithSets(30)] };
+    expect(isDraftValid(validateDraft('Day', [block]))).toBe(true);
+  });
+
+  it('rejects a 1-item superset (F-S3-04)', () => {
+    const block: BlockDraft = { ...emptyBlock(), title: 'x', blockType: 'superset', items: [itemWithSets(1)] };
+    expect(validateDraft('Day', [block]).blocks?.[0]?.structure).toMatch(/superset block needs at least 2 exercises/);
+  });
+
+  it('rejects a 1-item circuit (F-S3-04)', () => {
+    const block: BlockDraft = { ...emptyBlock(), title: 'x', blockType: 'circuit', circuitRounds: '3', items: [itemWithSets(1)] };
+    expect(validateDraft('Day', [block]).blocks?.[0]?.structure).toMatch(/circuit block needs at least 2 exercises/);
+  });
+
+  it('accepts a 2-item superset and a 2-item circuit', () => {
+    const superset: BlockDraft = { ...emptyBlock(), title: 'x', blockType: 'superset', items: [itemWithSets(1), itemWithSets(1)] };
+    const circuit: BlockDraft = { ...emptyBlock(), title: 'y', blockType: 'circuit', circuitRounds: '3', items: [itemWithSets(1), itemWithSets(1)] };
+    expect(isDraftValid(validateDraft('Day', [superset]))).toBe(true);
+    expect(isDraftValid(validateDraft('Day', [circuit]))).toBe(true);
+  });
+
+  it('a 1-item standard_set or amrap block is still fine (no compound-cardinality rule for them)', () => {
+    const standard: BlockDraft = { ...emptyBlock(), title: 'x', blockType: 'standard_set', items: [itemWithSets(1)] };
+    const amrap: BlockDraft = { ...emptyBlock(), title: 'y', blockType: 'amrap', amrapDurationSeconds: '60', items: [itemWithSets(1)] };
+    expect(isDraftValid(validateDraft('Day', [standard]))).toBe(true);
+    expect(isDraftValid(validateDraft('Day', [amrap]))).toBe(true);
+  });
 });
 
 describe('addPyramidSets / addBackOffSet', () => {

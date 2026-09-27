@@ -341,10 +341,71 @@ async function concurrency() {
   finish();
 }
 
+// ---------------------------------------------------------------------------------
+/** Reviewer gate rework F-S3-03 / F-S3-04: live RPC probes against the frozen limits. */
+async function limits() {
+  const state = loadState();
+  const p = await people(state);
+  const ex = await p.coachA.client.from('exercises').select('id').eq('is_official', true).eq('status', 'approved').limit(1).single();
+  const oneRepSet = { target_reps: 5 };
+  const manyItems = (n) =>
+    Array.from({ length: n }, () => ({ exercise_id: ex.data.id, measurement_mode: 'reps', sets: [oneRepSet] }));
+
+  const over16Items = await p.coachA.client.rpc('create_workout_template', {
+    p_name: `Limits over-items ${state.runId}`,
+    p_description: null,
+    p_visibility: 'private',
+    p_blocks: [{ title: 't', block_type: 'standard_set', items: manyItems(16) }],
+  });
+  check(over16Items.error?.code === '22023', 'F-S3-03: 16 items/block is rejected with 22023', over16Items.error);
+
+  const at15Items = await p.coachA.client.rpc('create_workout_template', {
+    p_name: `Limits 15 items ${state.runId}`,
+    p_description: null,
+    p_visibility: 'private',
+    p_blocks: [{ title: 't', block_type: 'standard_set', items: manyItems(15) }],
+  });
+  check(!at15Items.error, 'F-S3-03: exactly 15 items/block is accepted', at15Items.error);
+
+  const over30Sets = await p.coachA.client.rpc('create_workout_template', {
+    p_name: `Limits over-sets ${state.runId}`,
+    p_description: null,
+    p_visibility: 'private',
+    p_blocks: [{ title: 't', block_type: 'standard_set', items: [{ exercise_id: ex.data.id, measurement_mode: 'reps', sets: Array(31).fill(oneRepSet) }] }],
+  });
+  check(over30Sets.error?.code === '22023', 'F-S3-03: 31 sets/item is rejected with 22023', over30Sets.error);
+
+  const oneItemSuperset = await p.coachA.client.rpc('create_workout_template', {
+    p_name: `Limits 1-item superset ${state.runId}`,
+    p_description: null,
+    p_visibility: 'private',
+    p_blocks: [{ title: 't', block_type: 'superset', items: manyItems(1) }],
+  });
+  check(oneItemSuperset.error?.code === '22023', 'F-S3-04: a 1-item superset is rejected with 22023', oneItemSuperset.error);
+
+  const oneItemCircuit = await p.coachA.client.rpc('create_workout_template', {
+    p_name: `Limits 1-item circuit ${state.runId}`,
+    p_description: null,
+    p_visibility: 'private',
+    p_blocks: [{ title: 't', block_type: 'circuit', circuit_rounds: 3, items: manyItems(1) }],
+  });
+  check(oneItemCircuit.error?.code === '22023', 'F-S3-04: a 1-item circuit is rejected with 22023', oneItemCircuit.error);
+
+  const twoItemSuperset = await p.coachA.client.rpc('create_workout_template', {
+    p_name: `Limits 2-item superset ${state.runId}`,
+    p_description: null,
+    p_visibility: 'private',
+    p_blocks: [{ title: 't', block_type: 'superset', items: manyItems(2) }],
+  });
+  check(!twoItemSuperset.error, 'F-S3-04: a 2-item superset is accepted', twoItemSuperset.error);
+
+  finish();
+}
+
 const command = process.argv[2];
-const commands = { setup, slice1, slice2, concurrency };
+const commands = { setup, slice1, slice2, concurrency, limits };
 if (!commands[command]) {
-  console.error('Usage: sprint3-slices.mjs setup|slice1|slice2|concurrency');
+  console.error('Usage: sprint3-slices.mjs setup|slice1|slice2|concurrency|limits');
   process.exit(2);
 }
 await commands[command]();

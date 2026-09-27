@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { WorkoutBlocksEditor } from '@/components/WorkoutBlocksEditor';
 import { Button, CenteredSpinner, Heading, Notice, Screen, TextField } from '@/components/ui';
-import { buildBlocksPayload, emptyBlock, validateDraft, type BlockDraft } from '@/features/workouts/workout-builder';
+import { buildBlocksPayload, emptyBlock, isDraftValid, validateDraft, type BlockDraft } from '@/features/workouts/workout-builder';
 import { describeError } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
 
@@ -30,7 +30,9 @@ export default function PublishWorkoutVersionScreen() {
     },
   });
 
+  // validateDraft also checks a name; the version screen has none, so name errors are ignored here.
   const errors = validateDraft('placeholder', blocks);
+  const structurallyValid = isDraftValid({ ...errors, name: undefined });
 
   const publish = useMutation({
     mutationFn: async () => {
@@ -47,7 +49,7 @@ export default function PublishWorkoutVersionScreen() {
   });
 
   const submit = () => {
-    if (blocks.length < 1 || errors.blocks) {
+    if (!structurallyValid) {
       setShowErrors(true);
       return;
     }
@@ -63,7 +65,8 @@ export default function PublishWorkoutVersionScreen() {
       {message ? <Notice tone="danger">{message}</Notice> : null}
       <TextField label="Changelog note" value={notes} onChangeText={setNotes} placeholder="What changed?" />
       <WorkoutBlocksEditor blocks={blocks} onChange={setBlocks} approvedOnly={template.data?.visibility === 'organization'} />
-      {showErrors && errors.blocks ? <Notice tone="danger">Fix the highlighted fields before publishing.</Notice> : null}
+      {showErrors && errors.totalSets ? <Notice tone="danger">{errors.totalSets}</Notice> : null}
+      {showErrors && !structurallyValid ? <Notice tone="danger">Fix the highlighted fields before publishing.</Notice> : null}
       <Button label="Publish version" onPress={submit} loading={publish.isPending} />
     </Screen>
   );

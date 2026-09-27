@@ -59,6 +59,7 @@ export default function WorkoutBuilderScreen() {
       <View className="gap-4">
         {message ? <Notice tone="danger">{message}</Notice> : null}
         <TextField label="Name" value={name} onChangeText={setName} error={showErrors ? errors.name : null} />
+        {showErrors && errors.totalSets ? <Notice tone="danger">{errors.totalSets}</Notice> : null}
         <TextField label="Description" value={description} onChangeText={setDescription} placeholder="Optional" />
         <View className="gap-1.5">
           <Text className="text-sm font-medium text-ink-muted">Visibility</Text>

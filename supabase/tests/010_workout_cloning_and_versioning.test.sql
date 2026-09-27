@@ -9,7 +9,7 @@ CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
 -- ADR-002: let impersonated roles call pgTAP; rolled back with the test.
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA extensions TO anon, authenticated;
 
-SELECT plan(75);
+SELECT plan(77);
 
 -- Helpers (rolled back with the test) ------------------------------------------------
 CREATE TEMP TABLE ids (k text PRIMARY KEY, v uuid);
@@ -39,6 +39,26 @@ CREATE FUNCTION pg_temp.one(p_slug text, p_mode text, p_set text) RETURNS jsonb 
     jsonb_build_object('exercise_id', (SELECT id FROM public.exercises WHERE slug = p_slug AND status = 'approved'),
                        'measurement_mode', p_mode, 'sets', jsonb_build_array(p_set::jsonb)))));
 $fn$;
+-- One block of the given type with one item per element of p_item_set_counts, each item
+-- holding that many reps-mode 'push-up' sets. For the F-S3-03/F-S3-04 limit matrix.
+CREATE FUNCTION pg_temp.block_with_items(p_block_type text, p_circuit_rounds integer, p_item_set_counts integer[])
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $fn$
+DECLARE
+  v_push_up uuid := (SELECT id FROM public.exercises WHERE slug = 'push-up' AND status = 'approved');
+  v_items jsonb := '[]'::jsonb;
+  v_count integer;
+BEGIN
+  FOREACH v_count IN ARRAY p_item_set_counts LOOP
+    v_items := v_items || jsonb_build_array(jsonb_build_object(
+      'exercise_id', v_push_up, 'measurement_mode', 'reps',
+      'sets', (SELECT jsonb_agg(jsonb_build_object('target_reps', 5)) FROM generate_series(1, v_count))
+    ));
+  END LOOP;
+  RETURN jsonb_build_array(jsonb_build_object(
+    'title', 't', 'block_type', p_block_type, 'circuit_rounds', p_circuit_rounds, 'items', v_items
+  ));
+END;
+$fn$;
 CREATE FUNCTION pg_temp.remember(p_k text, p_v uuid) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER AS $fn$
 BEGIN
   INSERT INTO pg_temp.ids VALUES (p_k, p_v) ON CONFLICT (k) DO UPDATE SET v = excluded.v;
@@ -65,6 +85,7 @@ CREATE FUNCTION pg_temp.sig(p_tpl uuid, p_ver integer) RETURNS text LANGUAGE sql
   WHERE v.template_id = p_tpl AND v.version_number = p_ver;
 $fn$;
 GRANT EXECUTE ON FUNCTION pg_temp.sqlstate_of(text), pg_temp.act(text), pg_temp.bx(text), pg_temp.one(text, text, text),
+  pg_temp.block_with_items(text, integer, integer[]),
   pg_temp.remember(text, uuid), pg_temp.recall(text), pg_temp.sig(uuid, integer) TO authenticated;
 
 -- Fixtures -------------------------------------------------------------------------
@@ -277,6 +298,43 @@ SELECT is(
   ARRAY['ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'ok', 'ok'],
   'every measurement mode accepts its own well-formed set (including bodyweight, until_failure and notes-only technique work)'
 );
+-- F-S3-03 / F-S3-04 (reviewer gate rework): item/set/total-set limits and
+-- compound-block minimum cardinality. Every over-limit payload here is
+-- otherwise well-formed (single approved exercise, valid reps sets), so the
+-- rejection isolates exactly the limit or cardinality rule under test.
+SELECT is(
+  ARRAY[
+    pg_temp.sqlstate_of(format($$ SELECT public.create_workout_template('lim1', NULL, 'private', %L::jsonb) $$,
+      pg_temp.block_with_items('standard_set', NULL, array_fill(1, ARRAY[16])))),
+    pg_temp.sqlstate_of(format($$ SELECT public.create_workout_template('lim2', NULL, 'private', %L::jsonb) $$,
+      pg_temp.block_with_items('standard_set', NULL, ARRAY[31]))),
+    pg_temp.sqlstate_of(format($$ SELECT public.create_workout_template('lim3', NULL, 'private', %L::jsonb) $$,
+      pg_temp.block_with_items('standard_set', NULL, ARRAY[30, 30, 30, 30, 30, 1]))),
+    pg_temp.sqlstate_of(format($$ SELECT public.create_workout_template('lim4', NULL, 'private', %L::jsonb) $$,
+      pg_temp.block_with_items('superset', NULL, ARRAY[5]))),
+    pg_temp.sqlstate_of(format($$ SELECT public.create_workout_template('lim5', NULL, 'private', %L::jsonb) $$,
+      pg_temp.block_with_items('circuit', 2, ARRAY[5])))
+  ],
+  ARRAY['22023', '22023', '22023', '22023', '22023'],
+  'F-S3-03/F-S3-04: 16 items/block, 31 sets/item, 151 total sets, a 1-item superset and a 1-item circuit are all rejected with 22023'
+);
+SELECT is(
+  ARRAY[
+    pg_temp.sqlstate_of(format($$ SELECT public.create_workout_template('lim6', NULL, 'private', %L::jsonb) $$,
+      pg_temp.block_with_items('standard_set', NULL, array_fill(1, ARRAY[15])))),
+    pg_temp.sqlstate_of(format($$ SELECT public.create_workout_template('lim7', NULL, 'private', %L::jsonb) $$,
+      pg_temp.block_with_items('standard_set', NULL, ARRAY[30]))),
+    pg_temp.sqlstate_of(format($$ SELECT public.create_workout_template('lim8', NULL, 'private', %L::jsonb) $$,
+      pg_temp.block_with_items('standard_set', NULL, ARRAY[30, 30, 30, 30, 30]))),
+    pg_temp.sqlstate_of(format($$ SELECT public.create_workout_template('lim9', NULL, 'private', %L::jsonb) $$,
+      pg_temp.block_with_items('superset', NULL, ARRAY[5, 5]))),
+    pg_temp.sqlstate_of(format($$ SELECT public.create_workout_template('lim10', NULL, 'private', %L::jsonb) $$,
+      pg_temp.block_with_items('circuit', 2, ARRAY[5, 5])))
+  ],
+  ARRAY['ok', 'ok', 'ok', 'ok', 'ok'],
+  'F-S3-03/F-S3-04 boundaries remain valid: exactly 15 items/block, 30 sets/item, 150 total sets, a 2-item superset and a 2-item circuit'
+);
+
 -- Atomicity: the first block is valid, the second is not → nothing at all is stored.
 SELECT is(
   pg_temp.sqlstate_of($$ SELECT public.create_workout_template('Atomic probe', NULL, 'private',

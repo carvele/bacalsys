@@ -1,8 +1,18 @@
 # Sprint 3: Workout Builder with Set-Level Prescription — engineering status
 
-> **Status: READY FOR REVIEWER GATE.** Planning was approved by the Reviewer ("Sprint 3 planning verdict: ACCEPTED —
-> READY FOR CLAUDE EXECUTION"). This document is the implementation evidence for that gate. Sprint 3 is **not**
-> tagged accepted — that requires the Reviewer's approval of the actual implementation, relayed by the product owner.
+> **Status: READY FOR REVIEWER GATE (rework applied).** Planning was approved by the Reviewer ("Sprint 3 planning
+> verdict: ACCEPTED — READY FOR CLAUDE EXECUTION"). The first implementation-acceptance submission came back
+> **REWORK REQUIRED** (F-S3-03, F-S3-04, below); both are fixed and re-verified. Sprint 3 is **not** tagged
+> accepted — that requires the Reviewer's approval, relayed by the product owner.
+>
+> **Reviewer gate history:**
+> 1. Implementation submitted (commit `da8927f`) — deployed, product owner ran the signed-in click-through, all 5
+>    steps passed.
+> 2. Reviewer verdict: **REWORK REQUIRED** — the payload limits and compound-block cardinality had drifted from the
+>    frozen values (F-S3-03, F-S3-04). No architecture, D1–D5, RLS, immutability, grants, or org isolation was to be
+>    touched.
+> 3. Forward migration `20260927103524_workout_payload_limits_and_compound_block_cardinality` applied; client
+>    validation, pgTAP and Jest regressions added; hosted probes and advisors re-run. See §2 and §9.
 
 - **Baseline:** Roadmap v1.2 (`implementation_plan.md`) Section 10 — Sprint 3 Ordered Engineering Backlog, Schemas &
   Acceptance Slices, Decision D5, Tasks 3.0–3.14.
@@ -30,8 +40,18 @@
 | 3.12 Hosted Acceptance Slice 1 | ✅ | §6: **12/12** |
 | 3.13 Types, hooks, Jest, screens | ✅ | See §4 |
 | 3.14 Concurrency probes + hosted Slice 2 + full regression + this report | ✅ | §6–8 |
+| Reviewer gate rework (F-S3-03, F-S3-04) | ✅ | `20260927103524_workout_payload_limits_and_compound_block_cardinality`; see §2 and §9 |
 
 ## 2. Findings
+
+- **[F-S3-03](findings/F-S3-03-payload-limits-drifted-from-frozen-values.md)** (Bug, High — Reviewer implementation-
+  acceptance gate) — `app_private.build_workout_version` enforced 30 items/block, 50 sets/item and 500 total sets
+  instead of the frozen 15/30/150. Fixed with `CREATE OR REPLACE FUNCTION` in a forward migration (the original
+  migration files are not edited — they are already applied to `bacalsys-dev`). Client validation
+  (`workout-builder.ts`) and both pgTAP and Jest regressions updated to match exactly.
+- **[F-S3-04](findings/F-S3-04-compound-block-minimum-cardinality-missing.md)** (Bug, Medium — same gate) — `superset`
+  and `circuit` blocks accepted a single item; the frozen spec requires at least 2 (a "compound" block of one
+  exercise is not a superset or circuit). Fixed in the same migration and function.
 
 - **[F-S3-01](findings/F-S3-01-immutability-triggers-security-invoker-risk.md)** (Bug, High) — the Section 10 listing's
   immutability trigger functions needed `SECURITY DEFINER` to see `workout_versions.is_sealed` regardless of the
@@ -44,22 +64,25 @@
   `009` §5. `app_private.validate_workout_set` already caught this correctly for every RPC-driven write, so no runtime
   data was ever at risk — this closes a table-level backstop gap only.
 
-Both are implementation corrections to how the frozen Section 10 requirements are realized, not behavior or scope
-changes; no ADR was needed for either.
+All four findings are implementation corrections to how the frozen Section 10 requirements are realized, not
+behavior or scope changes; no ADR was needed for any of them.
 
 ## 3. Offline verification
 
-`npm run verify` (typecheck + lint + Jest + `test:scripts` + `db:verify`):
+`npm run verify` (typecheck + lint + Jest + `test:scripts` + `db:verify`), after the F-S3-03/F-S3-04 fix:
 
 ```
 Typecheck:  0 errors
 Lint:       0 errors, 0 warnings
-Jest:       6 suites, 60 tests passed (workout-builder.test.ts: 27 new)
-db:verify:  10 files, 441 assertions, 0 failed
+Jest:       6 suites, 70 tests passed (workout-builder.test.ts: 31, incl. 10 for F-S3-03/F-S3-04)
+db:verify:  10 files, 443 assertions, 0 failed
 ```
 
 `db:verify` file breakdown: `001`–`008` (Sprints 1–2, unchanged, 304 total) + `009_workout_builder_schema` (62) +
-`010_workout_cloning_and_versioning` (75) = 441.
+`010_workout_cloning_and_versioning` (77, incl. 2 new F-S3-03/F-S3-04 assertion groups) = 443.
+
+A mutation check (temporarily reverting the corrected limits in the new migration) confirmed the new pgTAP
+assertion (`010` #10) fails without the fix and passes with it — the regression is real, not a tautology.
 
 `npm run build:web` succeeds (930 modules, 1.6MB bundle) against the hosted backend
 (`https://sfptojkkmjggssqzyseo.supabase.co`); the deployed build was smoke-checked locally (`serve:web`) and lands on
@@ -72,7 +95,9 @@ Executor's standing rule against entering credentials into pages that talk to ho
 - `src/features/workouts/workout-builder.ts` — pure logic: draft types for blocks/items/sets, `validateSet` (mirrors
   `app_private.validate_workout_set` mode-by-mode), `validateDraft`, `buildBlocksPayload` (array order → derived
   `order_in_workout`/`order_in_block`/`set_number`), `addPyramidSets`/`addBackOffSet` helpers, `summarizeSet` for
-  display. **27 Jest tests** in `__tests__/workout-builder.test.ts`.
+  display, and (post reviewer-rework) the frozen `MAX_BLOCKS`/`MAX_ITEMS_PER_BLOCK`/`MAX_SETS_PER_ITEM`/
+  `MAX_TOTAL_SETS` constants plus compound-block (superset/circuit) minimum-cardinality validation. **31 Jest
+  tests** in `__tests__/workout-builder.test.ts`.
 - `src/components/WorkoutBlocksEditor.tsx` — the interactive hierarchical builder (block → item → set repeaters,
   pyramid/back-off helper buttons, an exercise picker modal that offers only approved exercises for an
   organization-visible routine).
@@ -89,17 +114,32 @@ Executor's standing rule against entering credentials into pages that talk to ho
 
 ## 5. Hosted Acceptance Slice 1 — Hierarchical Creation & Measurement Modes
 
+Re-run against fresh fixtures after the F-S3-03/F-S3-04 fix:
 `node --env-file=.env.hosted.local scripts/e2e/sprint3-slices.mjs slice1` — **12/12**:
 
 1. Coach creates the canonical routine (superset of Pull-up/Parallel Bar Dip pyramid + back-off sets, AMRAP Hanging
-   Leg Raise finisher) through `create_workout_template`.
+   Leg Raise finisher — 2 items in its superset block, well within the corrected 15-item limit) through
+   `create_workout_template`.
 2–6. `workout_templates` (1, organization), `workout_versions` (1, sealed, v1), `workout_blocks` (2),
    `workout_items` (3), `workout_item_sets` (7) — exact Slice 1 shape.
 7–11. Direct authenticated `INSERT`/`UPDATE`/`DELETE` against every one of the 5 hierarchy tables: **42501**.
 12. An unsupported measurement mode for the exercise (`push-up` + `holds`) is rejected with **22023**.
 
+## 5a. Hosted F-S3-03 / F-S3-04 Live Limit Probes
+
+`node --env-file=.env.hosted.local scripts/e2e/sprint3-slices.mjs limits` — **6/6** (real RPC calls against
+`bacalsys-dev`, not pgTAP):
+
+1. 16 items in a block → **22023**.
+2. Exactly 15 items in a block → accepted.
+3. 31 sets on one item → **22023**.
+4. A 1-item `superset` → **22023**.
+5. A 1-item `circuit` → **22023**.
+6. A 2-item `superset` → accepted.
+
 ## 6. Hosted Acceptance Slice 2 — Version Immutability, Historical Safety & Deep Cloning
 
+Re-run against fresh fixtures after the F-S3-03/F-S3-04 fix:
 `node --env-file=.env.hosted.local scripts/e2e/sprint3-slices.mjs slice2` — **14/14**, all 9 scenario steps from the
 spec:
 
@@ -115,6 +155,7 @@ spec:
 
 ## 7. Concurrency Verification Probes
 
+Re-run after the F-S3-03/F-S3-04 fix:
 `node --env-file=.env.hosted.local scripts/e2e/sprint3-slices.mjs concurrency` — **6/6**:
 
 1. **Concurrent publishes** — two `publish_new_workout_version` calls fired with `Promise.all` on the same template:
@@ -126,14 +167,15 @@ spec:
 
 ## 8. Hosted advisors
 
-`get_advisors` (security, performance) after all 8 migrations: no new findings introduced by Sprint 3. The four
-pre-existing `authenticated_security_definer_function_executable` warnings are Sprint 1/2 RPCs (intentional, by
-design — every one is an authenticated public wrapper); the `unused_index` INFO items are expected pre-traffic noise
-on newly created indexes (including the 6 new Sprint 3 indexes) and are not acted on.
+`get_advisors` (security, performance), re-run after the F-S3-03/F-S3-04 migration: no new findings from Sprint 3 or
+from the rework. The four pre-existing `authenticated_security_definer_function_executable` warnings are Sprint 1/2
+RPCs (intentional, by design — every one is an authenticated public wrapper); the `unused_index` INFO items are
+expected pre-traffic noise on newly created indexes and are not acted on (the count dropped from 19 to 15 as the
+hosted probe traffic exercised some of them).
 
 ## 9. Deployment & signed-in click-through
 
-- Commit [`da8927f`](https://github.com/carvele/bacalsys/commit/da8927f) pushed to `main`.
+- Commit [`da8927f`](https://github.com/carvele/bacalsys/commit/da8927f) pushed to `main` (first submission).
 - CI [run 36311916865](https://github.com/carvele/bacalsys/actions/runs/36311916865): **green** — typecheck, lint,
   Jest, `test:scripts`, `db:verify`, then build & deploy to GitHub Pages.
 - Signed-in UI click-through performed by the product owner against the deployed build. Reported result: **all
