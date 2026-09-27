@@ -21,10 +21,10 @@ An item is checked only with the evidence beside it. Detail is in [STATUS.md](ST
 | 12 | Concurrency verification probes | ✅ | **6/6** (STATUS §8) |
 | 13 | Supabase advisors | ✅ | No new security findings; 1 genuine performance gap (4 uncovered FKs) found and fixed (STATUS §10) |
 | 14 | F-S4-01 (`session_set_load_consistency` NULL-vs-CHECK gap) resolved | ✅ | Fixed pre-hosted-apply, in the initial schema migration; pgTAP 011 §2 |
-| 15 | CI green for every pushed commit | ✅ | Runs 36324519669, 36327084129 (STATUS §12); ⏳ pending for the fk-index commit |
+| 15 | CI green for every pushed commit | ✅ | Runs 36324519669, 36327084129, 36327659766 (STATUS §12) |
 | 16 | Client: offline outbox, sync engine, rest timer, substitution modal, player + summary screens (Tasks 4.9–4.14) | ✅ | STATUS §4; 23 new Jest tests incl. the full online→offline→reconnect→offline→bundle acceptance scenario |
-| 17 | Android dev-client boot (mandatory: 4 native modules added) | ⏳ | Build in progress at report time — STATUS §11 |
-| 18 | Signed-in UI click-through | ⏳ Pending product owner | Not performed by the Executor (credential-entry rule) |
+| 17 | Android dev-client boot (mandatory: 4 native modules added) | ✅ | Build/install/launch succeeded, all 4 modules autolinked, no crash in logcat — STATUS §11 |
+| 18 | Signed-in UI click-through | ⏳ Pending product owner | Read-only web smoke check only (STATUS §12); interactive click-through of the new screens not performed by the Executor (credential/live-account rule) |
 | 19 | Local-stack runs (`supabase test db`) | ⚠️ Waived | Docker is unavailable (no WSL); offline PGlite + hosted probes cover the same ground |
 | 20 | Hosted fixture cleanup | ⚠️ Not executed | The product owner's call, same as Sprints 2–3 |
 | 21 | Row-lock concurrency under true simultaneous transactions | ⚠️ Waived | Hosted probes assert outcome over concurrent RPC calls, not the lock wait itself — same standard as Sprints 2–3 |

@@ -196,7 +196,22 @@ left open:
 
 ## 11. Android dev-client boot
 
-`npx expo run:android --device Pixel_4` — **[FILL IN AFTER BUILD COMPLETES]**.
+`npx expo run:android --device Pixel_4` (AVD `Pixel_4`) — **build, install and launch succeeded**:
+
+- Gradle build: `BUILD SUCCESSFUL`, 475 tasks; the "Using expo modules" listing confirms all 4 new native modules
+  autolinked (`expo-audio` 57.0.5, `expo-haptics` 57.0.3, `expo-notifications` 57.0.21, `expo-sqlite` 57.0.3).
+- The dev client (`ph.bacalsys.app`) installed and launched: `dumpsys activity activities` shows
+  `topResumedActivity=ActivityRecord{… ph.bacalsys.app/.MainActivity}` in the foreground.
+- `logcat` after boot: no `FATAL`, `AndroidRuntime` crash, or module-related exception. The only `E`-level lines are a
+  benign, well-known Expo dev-client cosmetic race (`WindowManager: BadTokenException` from the dev-loading popup
+  trying to attach before the activity is fully resumed) and frame-skip/JIT-verification timing warnings — normal
+  emulator noise, not application errors.
+- A first attempt (emulator not yet fully booted when Gradle finished) failed only at the `adb`-install step
+  (`device 'emulator-5554' not found`); the emulator was confirmed booted (`sys.boot_completed=1`) and the run
+  repeated successfully above — the APK itself built cleanly both times.
+- Interactive in-app click-through on the native build (opening the Workout Player screens) was not performed this
+  round — redirected to the web verification below instead. This is narrower than a full manual walkthrough, but
+  confirms the concrete regression class native modules risk (a build/link/boot failure) did not occur.
 
 ## 12. Deployment & CI
 
@@ -205,9 +220,16 @@ left open:
   **green**.
 - Commit [`d173343`](https://github.com/carvele/bacalsys/commit/d173343) — the hosted E2E script. CI
   [run 36327084129](https://github.com/carvele/bacalsys/actions/runs/36327084129): **green**.
-- **[FILL IN]** the `workout_execution_fk_indexes` migration commit + its CI run.
-- No signed-in UI click-through has been performed for this sprint yet — that step is the product owner's, per the
-  Executor's standing rule against entering credentials into pages that talk to hosted Supabase.
+- Commit [`4008164`](https://github.com/carvele/bacalsys/commit/4008164) — hosted evidence, F-S4-01 finding, and the
+  `workout_execution_fk_indexes` migration. CI [run 36327659766](https://github.com/carvele/bacalsys/actions/runs/36327659766):
+  **green**.
+- **Web smoke check**: opened the live deployment (`https://carvele.github.io/bacalsys/`, rebuilt by each of the runs
+  above) in a browser under the product owner's own already-signed-in session — home screen and the "Workout
+  routines" → "My routines" catalog screen both render with zero console errors. No mutating action was taken (no
+  routine created, no session started) since that account is the product owner's real one, not a test fixture; a
+  full signed-in click-through of the new Workout Player screens is still pending the product owner, same as every
+  prior sprint's standing rule against the Executor entering credentials or acting on a live personal account beyond
+  a read-only check.
 
 ## 13. What was not verified
 
