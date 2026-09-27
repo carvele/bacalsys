@@ -187,6 +187,12 @@ hosted probe traffic exercised some of them).
      archives/unarchives it.
   5. Athlete browses "My routines" vs "Club templates" and opens a routine's detail to see the full prescribed
      block/exercise/set breakdown.
+- Reviewer verdict on that submission: **REWORK REQUIRED** (F-S3-03, F-S3-04).
+- Remediation commit [`c5a4eb8`](https://github.com/carvele/bacalsys/commit/c5a4eb8) pushed to `main`.
+- CI [run 36314719808](https://github.com/carvele/bacalsys/actions/runs/36314719808): **green** — typecheck, lint,
+  Jest, `test:scripts`, `db:verify`, then build & deploy to GitHub Pages. No further signed-in click-through was
+  requested for this fix (server-side/validation-only rework, same screens); the product owner may re-run it at
+  their discretion.
 
 ## 10. What was not verified
 
