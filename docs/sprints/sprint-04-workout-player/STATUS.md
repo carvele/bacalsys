@@ -256,6 +256,10 @@ left open:
 - Commit [`4008164`](https://github.com/carvele/bacalsys/commit/4008164) — hosted evidence, F-S4-01 finding, and the
   `workout_execution_fk_indexes` migration. CI [run 36327659766](https://github.com/carvele/bacalsys/actions/runs/36327659766):
   **green**.
+- Commit [`435337c`](https://github.com/carvele/bacalsys/commit/435337c) — Android/web boot evidence. CI
+  [run 36329178710](https://github.com/carvele/bacalsys/actions/runs/36329178710): **green**.
+- Commit [`03e634f`](https://github.com/carvele/bacalsys/commit/03e634f) — the **F-S4-02 fix** (Reviewer gate rework).
+  CI [run 36330960227](https://github.com/carvele/bacalsys/actions/runs/36330960227): **green**.
 - **Web smoke check**: opened the live deployment (`https://carvele.github.io/bacalsys/`, rebuilt by each of the runs
   above) in a browser under the product owner's own already-signed-in session — home screen and the "Workout
   routines" → "My routines" catalog screen both render with zero console errors. No mutating action was taken (no
