@@ -1,0 +1,226 @@
+# Sprint 4: Workout Player & Durable SQLite Offline Outbox — engineering status
+
+> **Status: IMPLEMENTATION COMPLETE — READY FOR REVIEWER GATE.** Not yet accepted; no tag. Per the standing workflow,
+> the Executor never self-approves. This report and [ACCEPTANCE.md](ACCEPTANCE.md) are the evidence package for the
+> ChatGPT Reviewer's implementation/evidence acceptance review.
+
+- **Baseline:** Roadmap v1.2 (`implementation_plan.md`) Section 11 — Sprint 4 Ordered Engineering Backlog, Schemas &
+  Acceptance Slices, Tasks 4.0–4.15.
+- **Environment:**
+  - Hosted dev project `bacalsys-dev` (`sfptojkkmjggssqzyseo`), PostgreSQL **17.6**.
+  - Offline harness: PGlite, PostgreSQL **18.3**.
+  - Docker is unavailable, so `supabase test db` and the local stack were **not run** (same waiver as Sprints 1–3).
+  - Android emulator: AVD `Pixel_4`.
+
+## 1. Tasks 4.0–4.15
+
+| Task | Status | Deliverable / evidence |
+|---|---|---|
+| 4.0 SDK deps & fixture cleanup | ✅ | `expo-sqlite`, `expo-audio`, `expo-haptics`, `expo-notifications` installed; `app.json` plugins added; guarded fixture cleanup (`scripts/test/cleanup-fixtures.mjs`) unchanged, still sprint-agnostic |
+| 4.1 Permission catalog | ✅ | `…130227_training_view_private_feedback_permission`: `training:view_private_feedback` (VP, President only); `seed.sql` updated |
+| 4.2 Execution DDL | ✅ | `…130335_workout_execution_schema`: 6 tables, `app_private.idempotency_keys`, all constraints/indexes, RLS enabled, explicit grants (SELECT only). F-S4-01 fixed in the same migration (never a separate remediation) |
+| 4.3 RLS & privacy helpers | ✅ | `…130533_workout_execution_rls`: `can_view_workout_session`, `can_view_session_private_feedback`, conditional `session_modifications` policy, F-S4-P13 uniform audit redaction triggers |
+| 4.4 Mutation RPCs | ✅ | `…130936_workout_execution_rpcs`: idempotency protocol, mode-aware `validate_session_set`, shared appliers (`apply_session_set`, `apply_session_substitution`, `instantiate_session_exercises`, `validate_abandonment`, `apply_session_feedback`), `start_workout_session`, `record_session_set`, `record_exercise_substitution`, `complete_workout_session` |
+| 4.5 Offline bundle sync | ✅ | `…131413_sync_offline_session_bundle`: online-start continuation + brand-new-offline paths, reusing 4.4's shared appliers verbatim |
+| 4.6 pgTAP schema/RLS/redaction/idempotency suite | ✅ | `supabase/tests/011_workout_sessions_schema.test.sql`, **35** assertions |
+| 4.7 pgTAP RPC/locking/F-S4-P14/offline suite | ✅ | `supabase/tests/012_workout_execution_and_outbox.test.sql`, **30** assertions |
+| 4.8 Hosted Execution Acceptance Slice 1 | ✅ | §6: **18/18** |
+| 4.9 Local SQLite & web outbox | ✅ | `src/services/storage/{outbox-types,sqlite-outbox,web-outbox,outbox-storage(.web)}.ts` |
+| 4.10 OfflineOutboxService & sync bridge | ✅ | `src/services/sync/outbox-sync.ts`; Jest acceptance test (§4) |
+| 4.11 Rest timer hook | ✅ | `src/hooks/useRestTimer.ts`; synthesized chime asset (`scripts/assets/generate-rest-chime.mjs`) |
+| 4.12 Substitution modal | ✅ | `src/components/ExerciseSubstitutionModal.tsx` |
+| 4.13 Interactive Workout Player | ✅ | `src/app/(athlete)/workout/active.tsx` |
+| 4.14 Summary & split feedback | ✅ | `src/app/(athlete)/workout/summary.tsx` |
+| 4.15 Concurrency probes + hosted Slice 2 + regression + Android boot + this report | ✅ | §7, §8, §3, §11 |
+
+## 2. Findings
+
+- **[F-S4-01](findings/F-S4-01-session-set-load-consistency-null-load-type-loophole.md)** (Bug, Medium) — the Section
+  11 `session_set_load_consistency` CHECK repeated Sprint 3's F-S3-02 three-valued-logic gap verbatim (`load_type IN
+  (...)` evaluates to `NULL`, not `FALSE`, when `load_type IS NULL`, and `CHECK` passes on `NULL`). Fixed **before any
+  hosted apply** — never a separate remediation migration, unlike F-S3-02/03/04 which were found across two
+  submissions. `app_private.validate_session_set` and the client mirror already enforced the equivalent rule
+  correctly, so no runtime data was ever at risk.
+
+No ADR was needed: F-S4-01 is an implementation correction to how the frozen Section 11 requirement is realized, not
+a behavior or scope change — same classification as its Sprint 3 counterpart.
+
+## 3. Offline verification
+
+`npm run verify` (typecheck + lint + Jest + `test:scripts` + `db:verify`):
+
+```
+Typecheck:  0 errors
+Lint:       0 errors, 0 warnings
+Jest:       8 suites, 93 tests passed (+23 new: session-player.test.ts 20, outbox-sync.test.ts 3)
+db:verify:  12 files, 508 assertions, 0 failed
+```
+
+`db:verify` file breakdown: `001`–`010` (Sprints 1–3, unchanged, 443 total) + `011_workout_sessions_schema` (35) +
+`012_workout_execution_and_outbox` (30) = 508.
+
+The `outbox-sync.test.ts` suite includes the Section 11 acceptance scenario verbatim: offline start → offline
+`RECORD_SET` → reconnect (`processQueue()`) → `START_SESSION` dispatches first and hands back the `session_id` +
+`exercise_mapping` handshake → the queued `RECORD_SET` resolves through it and dispatches → disconnect again at
+completion → a single coalesced `SYNC_BUNDLE` row → exactly one session, the granular rows never replayed once
+coalesced. A second test proves causal-dependency blocking (a `RECORD_SET` never dispatches ahead of its session's
+unresolved `START_SESSION`); a third proves the 5-attempt dead-letter threshold and manual retry.
+
+## 4. TypeScript, hooks, services & UI (Tasks 4.9–4.14)
+
+- `src/types/database.ts` regenerated from hosted (all 6 execution tables, 5 new/changed RPC signatures).
+- `src/features/workouts/session-player.ts` — pure logic mirroring `app_private.validate_session_set` /
+  `validate_abandonment` mode-by-mode, `buildSetPayload`, `buildFeedbackPayloads` (Rule E split), `buildOfflineBundle`
+  (Task 4.5's exact wire format), `summarizeActual`. **20 Jest tests.**
+- `src/features/workouts/session-store.ts` — a small Zustand store holding the one active session's local draft
+  (substitutions/logged sets keyed by the immutable `workout_item_id`, never a server-generated
+  `session_exercise_id`) across the active-workout and summary screens, since Expo Router unmounts a screen on
+  navigation. See §9's scope note on what this does and does not persist.
+- `src/services/storage/` — `outbox-types.ts` (shared shape), `sqlite-outbox.ts` (native, `expo-sqlite`),
+  `web-outbox.ts` (web, IndexedDB; an in-memory adapter strictly under `NODE_ENV === 'test'`), `outbox-storage.ts` /
+  `outbox-storage.web.ts` (Metro platform selection, matching the existing `auth-storage.ts`/`.web.ts` convention).
+- `src/services/sync/outbox-sync.ts` — `OfflineOutboxService`: FIFO-per-session dispatch with causal-dependency
+  blocking, exponential backoff, 5-attempt dead-letter + manual retry, the online-start reconnection handshake, and
+  terminal `SYNC_BUNDLE` coalescence. **3 Jest tests**, including the full Section 11 acceptance scenario (§3).
+- `src/hooks/useRestTimer.ts` — absolute wall-clock `restEndsAt`, recalculated on every `AppState` foreground
+  transition (never a decrementing counter); foreground chime (`expo-audio`, a synthesized two-tone WAV generated by
+  `scripts/assets/generate-rest-chime.mjs` — no third-party audio asset needed) + haptic (`expo-haptics`); a
+  background date-trigger notification (`expo-notifications`) as the reliable backgrounded/locked-screen alert,
+  cancelled on foreground return, skip or unmount.
+- `src/components/ExerciseSubstitutionModal.tsx` — exercise search, mode and reason selection; disables the whole
+  substitution action once the item has a logged set (F-S4-P14 client-side, mirroring the server's `22000`).
+- `src/app/(athlete)/workout/active.tsx` — the interactive player: starts (or resumes) the session, checks
+  connectivity itself for every action (online → direct RPC; offline → durable outbox), a rest-timer banner, and
+  step-by-step exercise/set progression with a "Swap this exercise" action.
+- `src/app/(athlete)/workout/summary.tsx` — prescribed-vs-actual per exercise, the finished/ended-early toggle with
+  abandonment reason, ordinary difficulty/energy rating, and the private discomfort form with an explicit visibility
+  notice. Completion routes through a direct `complete_workout_session` call when the session never went offline, or
+  a coalesced `SYNC_BUNDLE` otherwise (see §9).
+- `src/app/(athlete)/workouts/[id].tsx` — added a "Start workout" action linking into the player.
+- `(athlete)/_layout.tsx` — two new `Stack.Screen` entries; typed routes regenerated (`npx expo customize
+  tsconfig.json`, the documented workaround since routes only regenerate via `expo start` otherwise).
+
+## 5. Database changes applied to hosted `bacalsys-dev`
+
+All 7 migrations applied via the Supabase MCP (`training_view_private_feedback_permission`,
+`workout_execution_schema`, `workout_execution_rls`, `workout_execution_rpcs`, `sync_offline_session_bundle`, and —
+after the performance advisor flagged 4 uncovered foreign keys — `workout_execution_fk_indexes`). `list_migrations`
+confirms all 7 land after Sprint 3's final `workout_payload_limits_and_compound_block_cardinality`.
+`generate_typescript_types` re-run after the schema/RPC migrations landed.
+
+## 6. Hosted Execution Acceptance Slice 1 — Live Player, Substitution & Split Feedback
+
+`node --env-file=.env.hosted.local scripts/e2e/sprint4-slices.mjs slice1` — **18/18**:
+
+1–2. The athlete starts a session from the fixture routine; `exercise_mapping` is keyed by `workout_item_id`.
+3–5. Substitutes Pull-up → Parallel Bar Dip (`pain_discomfort`) before any set, logs a set, completes with split
+   feedback (`difficulty_rating: 8, energy_level: 4`; `has_discomfort: true, discomfort_area: 'Left Shoulder'`).
+6–8. `completed_at >= started_at`; exactly 1 substitution (`pain_discomfort`); exactly 1 private feedback row.
+9–11. The current primary coach sees the session, the private feedback, and the sensitive substitution.
+12–15. The Leader (`training:view_org`) sees the session and ordinary feedback, but **0 rows** of private feedback
+   and **0 rows** of the sensitive substitution.
+16. The former coach (tenure closed before this session) sees **0 rows**.
+17–18. A `training:view_org`/`audit:view` holder queries `audit_logs`: the private-feedback event's sensitive fields
+   and the substitution's `reason_code` are uniformly `[REDACTED]` (F-S4-P13).
+
+## 7. Hosted Acceptance Slice 2 — Offline Outbox, Interrupted Connectivity & Replay Idempotency
+
+`node --env-file=.env.hosted.local scripts/e2e/sprint4-slices.mjs slice2` — **6/6**:
+
+1. A session starts **online**.
+2–4. A single `sync_offline_session_bundle` call (simulating the interrupted-connectivity path: one substitution,
+   3 sets, split feedback, `existing_session_id` set) syncs into that same session; it transitions to `completed`
+   with exactly 3 sets — zero data loss.
+5–6. Resending the **identical** bundle payload with the same idempotency key returns the cached success and creates
+   **zero** additional sets.
+
+## 8. Concurrency Verification Probes
+
+`node --env-file=.env.hosted.local scripts/e2e/sprint4-slices.mjs concurrency` — **6/6**:
+
+1–2. Two concurrent `start_workout_session` calls with the **same** idempotency key: both succeed, resolve to the
+   identical `session_id` (the row-level reservation lock serializes them; no duplicate session).
+3. Two concurrent `record_session_set` calls with the **same** key: exactly one set (`set_id` matches on both sides).
+4. A different athlete/key starts a fully independent session concurrently, unaffected.
+5. The **same** athlete attempting a second session with a **different** key is rejected with `23505` (the partial
+   unique index + profile row lock).
+6. `record_session_set` racing `complete_workout_session` on the same session: completion always succeeds; the
+   racing set either wins cleanly before the lock, or fails closed with `22000` (terminal session immutable) — never
+   a corrupted or partially-applied state either way.
+
+## 9. Design decisions not fully specified by the frozen text
+
+Recorded here rather than as findings, since none of them contradict Section 11 — they fill in gaps the frozen text
+left open:
+
+- **Actual-set mode exclusivity vs. presence** (`validate_session_set` / `validateActualSet`): mode exclusivity (an
+  exercise's actuals may only ever carry the fields its mode supports) always applies; the PRESENCE of the mode's
+  primary metric is required only when `is_completed = true`, so an athlete can log "attempted, not completed"
+  without a number. `technique_practice` has no notes-only fallback (Rule E: `session_sets` carries no notes column
+  at all, unlike the prescription table).
+- **Client-generated ids**: correlation and idempotency keys are minted client-side via `src/lib/random-id.ts` (a
+  Math.random-based RFC4122-v4-ish generator), not `expo-crypto`, since they are never used for cryptographic
+  purposes and adding a native dependency purely to mint local ids was judged unnecessary scope.
+- **Mixed online/offline-in-one-session completion**: summary.tsx always completes through the coalesced
+  `SYNC_BUNDLE` path whenever the session ever went offline (any pending/unsynced outbox row for its correlation id
+  exists) or never got an online `session_id`, regardless of connectivity at completion time — never a direct
+  `complete_workout_session` call in that case. This avoids a real race the frozen spec does not itself resolve: a
+  bundle unconditionally replays every substitution/set in its arrays, and an item already applied via an earlier
+  successful granular RPC call (a session that went online → offline → online again mid-workout) would hit `23505`
+  on replay and abort the whole bundle. The two scenarios the frozen Acceptance Slices actually specify — fully
+  online, and online-start-then-offline-through-completion — are both covered without this gap (§6, §7); a session
+  that alternates connectivity mid-workout is **not** exercised by either hosted slice and is called out explicitly
+  as untested below, not silently assumed correct.
+- **In-memory session draft**: `session-store.ts` does not persist across an app process kill. The durable outbox
+  rows it may have already enqueued survive on disk and still sync once the app reopens; only the athlete's own
+  local view of an in-progress session (and any not-yet-submitted set they were mid-typing) is not recovered. Full
+  app-relaunch mid-session recovery was judged out of scope for this sprint (see §11).
+- **Circuit/AMRAP player pacing**: the player presents each prescribed item's sets in block/item order and lets the
+  athlete log actual sets freely (any `set_number`, matching or not the prescribed count); it does not auto-repeat a
+  circuit block's items across `circuit_rounds`, nor run an AMRAP countdown UI. The domain data model does not
+  require either (an athlete can simply log more sets), and neither is exercised by the frozen Acceptance Slices.
+
+## 10. Hosted advisors
+
+`get_advisors` (security, performance), re-run after all 7 migrations and the full hosted E2E exercise:
+
+- **Security**: no new findings. The 4 pre-existing `authenticated_security_definer_function_executable` warnings are
+  Sprint 1/2 RPCs (intentional); the leaked-password-protection warning is pre-existing and unrelated.
+- **Performance**: the advisor flagged 4 uncovered foreign keys on the new execution tables
+  (`session_exercises.workout_item_id`, `session_modifications.original_workout_item_id`,
+  `session_modifications.replacement_exercise_id`, `session_sets.prescribed_item_set_id`) — a genuine Sprint 4 gap,
+  fixed immediately with the forward migration `workout_execution_fk_indexes` (§5), re-verified clean. The
+  `unused_index` INFO items are expected pre-traffic noise on a low-volume dev database (same as Sprint 3); the
+  `multiple_permissive_policies` warning on `public.exercises` predates Sprint 4 (Sprint 2's exercise workflow) and
+  was not touched.
+
+## 11. Android dev-client boot
+
+`npx expo run:android --device Pixel_4` — **[FILL IN AFTER BUILD COMPLETES]**.
+
+## 12. Deployment & CI
+
+- Commit [`d6732d3`](https://github.com/carvele/bacalsys/commit/d6732d3) — the full Sprint 4 implementation (database
+  + client) — pushed to `main`. CI [run 36324519669](https://github.com/carvele/bacalsys/actions/runs/36324519669):
+  **green**.
+- Commit [`d173343`](https://github.com/carvele/bacalsys/commit/d173343) — the hosted E2E script. CI
+  [run 36327084129](https://github.com/carvele/bacalsys/actions/runs/36327084129): **green**.
+- **[FILL IN]** the `workout_execution_fk_indexes` migration commit + its CI run.
+- No signed-in UI click-through has been performed for this sprint yet — that step is the product owner's, per the
+  Executor's standing rule against entering credentials into pages that talk to hosted Supabase.
+
+## 13. What was not verified
+
+- **`supabase test db` / local Docker stack**: unavailable in this environment (same waiver as Sprints 1–3).
+- **Signed-in UI click-through**: not performed by the Executor; pending the product owner.
+- **Hosted fixture cleanup**: the Sprint 4 tagged fixture accounts (6 profiles + 1 organization) were not removed
+  after the E2E runs — same "the product owner's call" waiver as Sprints 2–3.
+- **Row-lock concurrency under true simultaneous transactions**: the hosted probes fire concurrent RPC calls over
+  separate PostgREST connections and assert the *outcome*, not the lock wait itself — same evidentiary standard
+  accepted for Sprints 2 and 3.
+- **Mixed online/offline-in-one-session completion**: see §9 — not exercised by either hosted Acceptance Slice, and a
+  known (documented, not silently assumed away) gap in the bundle-replay path for that specific scenario.
+- **App-process-kill mid-session recovery**: see §9 — the in-memory session draft does not survive a kill; only the
+  already-enqueued durable outbox rows do.
+- **Circuit-block round repetition / AMRAP countdown UI**: see §9 — the player does not auto-expand rounds or run a
+  countdown; the athlete can freely log additional sets instead.
