@@ -180,6 +180,58 @@ three tests fail against it and pass again once fixed.
 Jest **98/98** (95 + 3 new), offline pgTAP **508/508** (unaffected — UI-only
 fix, no migration or SQL changed).
 
+## Second narrow re-review follow-up: the start-error was rendered unreachable
+
+The Reviewer's re-review of the ordering fix above confirmed
+`beginOnlineSession()` itself sound — `onError` correctly calls `setError(...)`
+and correctly never calls `setSessionId(...)` — but found one remaining
+integration defect in how `active.tsx` **rendered** that state: because
+`setSessionId` is never called on failure, `activeSession.sessionId` stays
+`null`, which keeps this true:
+
+```ts
+const isAwaitingStart =
+  !activeSession || (onlineManager.isOnline() && activeSession.sessionId === null);
+```
+
+and the screen checked that (→ spinner) **before** checking whether a start
+error existed:
+
+```ts
+if (hierarchy.isLoading || isAwaitingStart) return <CenteredSpinner label="Starting your workout…" />;
+// ...the existing error <Notice> further down was unreachable from here.
+```
+
+So a `persistHandshake` rejection correctly kept the session non-ready, but
+the athlete saw an indefinite "Starting your workout…" spinner instead of the
+promised error — the failure was invisible, not just non-actionable.
+
+**Fix**: extracted the render-state priority decision into its own pure,
+testable function, `src/features/workouts/workout-screen-state.ts` —
+`resolveWorkoutScreenState()` — which checks `isAwaitingStart && startError`
+**before** the spinner check, returning a `'start-error'` state that
+outranks `'starting'`. `active.tsx` now renders that error (with a "Go back"
+button) instead of the spinner, and — per the Reviewer's explicit
+requirement — this path never re-invokes `start_workout_session`; it only
+changes what is rendered for a state the app was already in. The successful
+ordering invariant (durable persist first, then `setSessionId`) from the
+first narrow re-review is untouched.
+
+**Regression coverage**: `src/features/workouts/__tests__/workout-screen-state.test.ts`
+(8 new tests) proves the full state-priority ordering, most directly: "surfaces
+a start/persistence error even while still awaiting start (the bug this
+fixes)" — asserting `{ kind: 'start-error', ... }` is returned instead of
+`{ kind: 'starting' }` when both `isAwaitingStart` and `startError` are set. A
+mutation-testing pass (temporarily restoring the original order — spinner
+check before the error check) confirmed exactly that one test fails against
+the reverted code (message: `-{kind: 'start-error', ...}` / `+{kind:
+'starting'}`, the other 7 unaffected) and passes again once the fix is
+restored.
+
+`npm run verify` re-run in full: typecheck 0 errors, lint 0 errors/warnings,
+Jest **106/106** (98 + 8 new), offline pgTAP **508/508** (unaffected — UI-only
+fix, no migration, RPC, RLS or `OutboxStorage` change).
+
 ## Classification note
 
 No ADR was needed: this is a correction to the client implementation's

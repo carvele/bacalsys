@@ -15,6 +15,7 @@ import {
 } from '@/features/workouts/session-player';
 import { beginOnlineSession } from '@/features/workouts/session-start';
 import { useWorkoutSessionStore } from '@/features/workouts/session-store';
+import { resolveWorkoutScreenState } from '@/features/workouts/workout-screen-state';
 import { labelFor, summarizeSet, type MeasurementMode } from '@/features/workouts/workout-builder';
 import { useRestTimer } from '@/hooks/useRestTimer';
 import { describeError } from '@/lib/errors';
@@ -143,22 +144,49 @@ export default function ActiveWorkoutScreen() {
   // offline outbox). Offline: the session is usable as soon as begin() ran.
   const isAwaitingStart = !activeSession || (onlineManager.isOnline() && activeSession.sessionId === null);
 
-  if (!versionId) return <CenteredSpinner label="Loading…" />;
-  if (hierarchy.isLoading || isAwaitingStart) return <CenteredSpinner label="Starting your workout…" />;
-  if (hierarchy.isError) {
+  // F-S4-02 (second narrow re-review): the priority between "still starting"
+  // and "the start/persistence failed" lives in resolveWorkoutScreenState,
+  // tested independently of this screen's native/query dependencies — see
+  // its own doc comment for why a start error must outrank the spinner.
+  const screenState = resolveWorkoutScreenState({
+    hasVersionId: !!versionId,
+    isAwaitingStart,
+    startError: error,
+    hierarchyLoading: hierarchy.isLoading,
+    hierarchyError: hierarchy.isError,
+    stepsCount: steps.length,
+  });
+
+  if (screenState.kind === 'loading') return <CenteredSpinner label="Loading…" />;
+  if (screenState.kind === 'start-error') {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center gap-4 bg-surface p-6">
+        <Notice tone="danger">{screenState.message}</Notice>
+        <Button label="Go back" variant="secondary" onPress={() => router.back()} />
+      </SafeAreaView>
+    );
+  }
+  if (screenState.kind === 'starting') return <CenteredSpinner label="Starting your workout…" />;
+  if (screenState.kind === 'hierarchy-error') {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-surface p-6">
         <Notice tone="danger">{describeError(hierarchy.error)}</Notice>
       </SafeAreaView>
     );
   }
-  if (steps.length === 0) {
+  if (screenState.kind === 'empty') {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-surface p-6">
         <Notice tone="danger">This routine has no exercises.</Notice>
       </SafeAreaView>
     );
   }
+  // Unreachable by construction: screenState.kind === 'ready' implies
+  // isAwaitingStart is false, which implies activeSession is non-null — see
+  // resolveWorkoutScreenState. This is here purely so TS can narrow
+  // `activeSession` below (the narrowing isn't preserved through the helper
+  // call above).
+  if (!activeSession) return <CenteredSpinner label="Starting your workout…" />;
 
   const step = steps[Math.min(currentIndex, steps.length - 1)];
   const substitution = activeSession.substitutions[step.item.id];

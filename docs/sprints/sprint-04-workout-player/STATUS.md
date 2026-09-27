@@ -1,6 +1,6 @@
 # Sprint 4: Workout Player & Durable SQLite Offline Outbox — engineering status
 
-> **Status: F-S4-02 NARROW RE-REVIEW FIX COMPLETE — READY FOR RE-REVIEW.** Not yet accepted; no tag. Per the standing
+> **Status: F-S4-02 SECOND NARROW RE-REVIEW FIX COMPLETE — READY FOR RE-REVIEW.** Not yet accepted; no tag. Per the standing
 > workflow, the Executor never self-approves. This report and [ACCEPTANCE.md](ACCEPTANCE.md) are the evidence package
 > for the ChatGPT Reviewer's implementation/evidence acceptance review.
 >
@@ -20,11 +20,20 @@
 >    `workout/active.tsx` called `setSessionId()` (synchronously exposing the player as ready) **before** awaiting
 >    `persistHandshake()`, and never handled a rejection — a narrower instance of the same defect class, purely in
 >    the UI's own ordering.
-> 5. Fixed (commit below): the ordering/fail-closed invariant was extracted into its own testable function,
+> 5. Fixed (commit `4b7da12`): the ordering/fail-closed invariant was extracted into its own testable function,
 >    `beginOnlineSession()`; `active.tsx` now awaits the durable write before exposing the session as ready, and
 >    fails closed (surfaces an error, never calls `setSessionId`) if it rejects. 3 new Jest tests prove the ordering
->    and the fail-closed behavior directly; mutation-tested against the original ordering. See §2 (finding) and §3
->    (evidence).
+>    and the fail-closed behavior directly; mutation-tested against the original ordering.
+> 6. Reviewer's second narrow re-review verdict: **FAIL — one final integration defect.** The ordering/fail-closed
+>    fix itself was confirmed correct (`onError` fires, `setSessionId` never called), but because `sessionId` stays
+>    `null` on failure, `isAwaitingStart` also stays `true` — and `active.tsx` checked that (→ spinner) **before**
+>    checking whether a start error existed, so the error `<Notice>` was unreachable. The athlete saw an indefinite
+>    "Starting your workout…" spinner instead of the promised error.
+> 7. Fixed (commit below): the render-state priority was extracted into its own testable function,
+>    `resolveWorkoutScreenState()` (`src/features/workouts/workout-screen-state.ts`), which checks a start error
+>    **before** the spinner. `active.tsx` now renders that error (with a "Go back" action) instead of the spinner,
+>    without ever re-invoking `start_workout_session`. 8 new Jest tests prove the full state-priority ordering;
+>    mutation-tested against the original (spinner-first) order. See §2 (finding) and §3 (evidence).
 
 - **Baseline:** Roadmap v1.2 (`implementation_plan.md`) Section 11 — Sprint 4 Ordered Engineering Backlog, Schemas &
   Acceptance Slices, Tasks 4.0–4.15.
@@ -73,33 +82,43 @@
   follow-up** on the same finding then caught one remaining instance of the same race purely in `active.tsx`'s own
   ordering: it exposed the Workout Player as ready (`setSessionId`, synchronous) *before* the durable write was
   awaited, and never handled a rejection. Fixed by extracting the ordering/fail-closed invariant into its own tested
-  function (`beginOnlineSession()` in `session-start.ts`). Section 11 architecture, F-S4-01, F-S4-P13, F-S4-P14,
-  permissions, RLS and server mutation semantics were not touched by either round of this fix.
+  function (`beginOnlineSession()` in `session-start.ts`). A **second narrow re-review follow-up** then caught one
+  more integration defect: `beginOnlineSession()`'s fail-closed behavior was itself correct (`setSessionId` never
+  called on failure), but that very fact kept `isAwaitingStart` true, and `active.tsx` checked that (→ spinner)
+  *before* checking whether a start error existed — so the error was set but unreachable behind an indefinite
+  spinner. Fixed by extracting the render-state priority into its own tested function
+  (`resolveWorkoutScreenState()` in `workout-screen-state.ts`), which checks the start error first. Section 11
+  architecture, F-S4-01, F-S4-P13, F-S4-P14, permissions, RLS, server mutation semantics and the `OutboxStorage`
+  design were not touched by any of the three rounds of this fix.
 
 No ADR was needed for either finding: both are implementation corrections to how the frozen Section 11 requirement
 and the client's own stated durability guarantee are realized, not behavior or scope changes.
 
 ## 3. Offline verification
 
-`npm run verify` (typecheck + lint + Jest + `test:scripts` + `db:verify`), after the F-S4-02 narrow re-review fix:
+`npm run verify` (typecheck + lint + Jest + `test:scripts` + `db:verify`), after the F-S4-02 second narrow re-review fix:
 
 ```
 Typecheck:  0 errors
 Lint:       0 errors, 0 warnings
-Jest:       9 suites, 98 tests passed (+28 new: session-player.test.ts 20, outbox-sync.test.ts 5 [3 original + 2
-            F-S4-02 recovery tests], session-start.test.ts 3 [F-S4-02 narrow re-review ordering/fail-closed tests])
-db:verify:  12 files, 508 assertions, 0 failed (unaffected — both F-S4-02 fixes are client-only, no migration/SQL changed)
+Jest:       10 suites, 106 tests passed (+36 new: session-player.test.ts 20, outbox-sync.test.ts 5 [3 original + 2
+            F-S4-02 recovery tests], session-start.test.ts 3 [F-S4-02 narrow re-review ordering/fail-closed tests],
+            workout-screen-state.test.ts 8 [F-S4-02 second narrow re-review render-priority tests])
+db:verify:  12 files, 508 assertions, 0 failed (unaffected — all three F-S4-02 fixes are client-only, no migration/SQL changed)
 ```
 
 `db:verify` file breakdown: `001`–`010` (Sprints 1–3, unchanged, 443 total) + `011_workout_sessions_schema` (35) +
 `012_workout_execution_and_outbox` (30) = 508.
 
-Two mutation-testing passes confirmed both rounds of the regression tests are real, not tautologies: (1) temporarily
-reverting `persistHandshake`/`getHandshake` in `outbox-sync.ts` back to an in-process `Map` (the original bug) made
-both `outbox-sync.test.ts` restart-recovery tests fail with precisely the Reviewer's described symptom; (2)
+Three mutation-testing passes confirmed all three rounds of the regression tests are real, not tautologies: (1)
+temporarily reverting `persistHandshake`/`getHandshake` in `outbox-sync.ts` back to an in-process `Map` (the original
+bug) made both `outbox-sync.test.ts` restart-recovery tests fail with precisely the Reviewer's described symptom; (2)
 temporarily reverting `beginOnlineSession()` to call `onReady` before awaiting `persistHandshake` and leaving its
-rejection unhandled (the narrow-re-review bug) made all three `session-start.test.ts` tests fail. Both pass again
-once their respective fixes are restored.
+rejection unhandled (the first narrow-re-review bug) made all three `session-start.test.ts` tests fail; (3)
+temporarily reverting `resolveWorkoutScreenState()`'s check order to spinner-before-error (the second narrow-review
+bug) made exactly the one test asserting that priority fail, with the exact described symptom (`{kind: 'starting'}`
+returned instead of `{kind: 'start-error', ...}`), the other 7 in that file unaffected. All three pass again once
+their respective fixes are restored.
 
 The `outbox-sync.test.ts` suite includes the Section 11 acceptance scenario verbatim: offline start → offline
 `RECORD_SET` → reconnect (`processQueue()`) → `START_SESSION` dispatches first and hands back the `session_id` +
@@ -121,6 +140,10 @@ unresolved `START_SESSION`); a third proves the 5-attempt dead-letter threshold 
 - `src/features/workouts/session-start.ts` — **F-S4-02 narrow re-review**: `beginOnlineSession()` isolates the
   online-start ordering/fail-closed invariant (durable handshake write must succeed before the session is exposed as
   ready) so it's directly unit-testable, independent of `workout/active.tsx`'s other concerns. **3 Jest tests.**
+- `src/features/workouts/workout-screen-state.ts` — **F-S4-02 second narrow re-review**: `resolveWorkoutScreenState()`
+  isolates the top-level render-state priority decision (a start/persistence error must outrank the "still starting"
+  spinner, since a failed start keeps the session non-ready by design) so it's directly unit-testable, independent of
+  `workout/active.tsx`'s native/query dependencies. **8 Jest tests.**
 - `src/services/storage/` — `outbox-types.ts` (shared shape, incl. `SessionHandshake` and the
   `saveHandshake`/`getHandshake` contract added by F-S4-02), `sqlite-outbox.ts` (native, `expo-sqlite`; the
   `offline_mutations` table plus a `session_handshakes` table), `web-outbox.ts` (web, IndexedDB with a second
@@ -285,6 +308,11 @@ left open:
   `active.tsx` ordering/fail-closed correction via `beginOnlineSession()` (new `session-start.ts` + 3 Jest tests),
   the finding-doc follow-up section, and this STATUS.md/ACCEPTANCE.md update. CI
   [run 36332796594](https://github.com/carvele/bacalsys/actions/runs/36332796594): **green**.
+- Commit [`455763f`](https://github.com/carvele/bacalsys/commit/455763f) — filled in the `4b7da12` commit hash/CI link
+  above once available. CI [run 36332997632](https://github.com/carvele/bacalsys/actions/runs/36332997632): **green**.
+- Commit `<pending>` — the **F-S4-02 second narrow re-review fix**: `active.tsx` render-priority correction via
+  `resolveWorkoutScreenState()` (new `workout-screen-state.ts` + 8 Jest tests), the finding-doc follow-up section,
+  and this STATUS.md/ACCEPTANCE.md update. CI run `<pending>` — to be filled in once pushed.
 - **Web smoke check**: opened the live deployment (`https://carvele.github.io/bacalsys/`, rebuilt by each of the runs
   above) in a browser under the product owner's own already-signed-in session — home screen and the "Workout
   routines" → "My routines" catalog screen both render with zero console errors. No mutating action was taken (no
