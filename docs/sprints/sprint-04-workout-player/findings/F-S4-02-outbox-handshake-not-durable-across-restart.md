@@ -137,6 +137,49 @@ rests on exact structural symmetry with the already-tested `offline_mutations`
 persistence pattern plus the Sprint 4 Android dev-client boot confirming
 `expo-sqlite` itself initializes correctly in this app.
 
+## Narrow re-review follow-up: the online-start UI ordering itself
+
+The Reviewer's first re-review of this fix found the storage/service layer
+above sound, but caught one remaining instance of the same class of race in
+the UI code that CALLS `persistHandshake()`: `src/app/(athlete)/workout/active.tsx`
+called Zustand's `setSessionId()` — which synchronously makes the Workout
+Player usable — **before** `await`ing `persistHandshake()`, not after:
+
+```ts
+setSessionId(result.session_id, result.exercise_mapping ?? {});
+await offlineOutboxService.persistHandshake(correlationId, { ... });
+```
+
+Since `setSessionId` is synchronous, this exposed the player as ready before
+the durable write was guaranteed to have succeeded — and if `persistHandshake`
+itself ever rejected (e.g. the on-device SQLite write failing), the player had
+already been promoted to ready with no durable recovery identity at all,
+reintroducing a narrower version of the same defect purely in the UI's own
+ordering.
+
+**Fix**: extracted the invariant into its own pure function,
+`src/features/workouts/session-start.ts` — `beginOnlineSession()` — so it is
+directly testable independent of the screen's other concerns (hierarchy
+fetch, the rest timer, which pulls in native modules Jest cannot load).
+`active.tsx` now calls it, awaiting the durable write and calling
+`setSessionId` (`onReady`) only once it resolves; if it rejects, `setSessionId`
+is never called and the error is surfaced (`onError`) instead — the player
+stays in its "starting" state (`isAwaitingStart` stays true) rather than
+silently becoming usable.
+
+**Regression coverage**: `src/features/workouts/__tests__/session-start.test.ts`
+(3 new tests) proves directly: (1) `onReady` does not fire until
+`persistHandshake` resolves — asserted while its promise is still pending;
+(2) if `persistHandshake` rejects, `onReady` is never called and `onError` is,
+instead; (3) the call order is `persist` then `ready`, never the reverse. A
+mutation-testing pass (reverting `beginOnlineSession` to the original buggy
+order, with `onReady` called first and the rejection unhandled) confirmed all
+three tests fail against it and pass again once fixed.
+
+`npm run verify` re-run in full: typecheck 0 errors, lint 0 errors/warnings,
+Jest **98/98** (95 + 3 new), offline pgTAP **508/508** (unaffected — UI-only
+fix, no migration or SQL changed).
+
 ## Classification note
 
 No ADR was needed: this is a correction to the client implementation's

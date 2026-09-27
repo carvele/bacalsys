@@ -13,6 +13,7 @@ import {
   buildSetPayload,
   type ActualSetDraft,
 } from '@/features/workouts/session-player';
+import { beginOnlineSession } from '@/features/workouts/session-start';
 import { useWorkoutSessionStore } from '@/features/workouts/session-store';
 import { labelFor, summarizeSet, type MeasurementMode } from '@/features/workouts/workout-builder';
 import { useRestTimer } from '@/hooks/useRestTimer';
@@ -105,13 +106,21 @@ export default function ActiveWorkoutScreen() {
           setError(describeError(startError));
         } else {
           const result = data as { session_id: string; exercise_mapping: Record<string, string> };
-          setSessionId(result.session_id, result.exercise_mapping ?? {});
-          // F-S4-02: awaited so the handshake is durably persisted before this
-          // effect considers the session "ready" for further actions.
-          await offlineOutboxService.persistHandshake(correlationId, {
-            sessionId: result.session_id,
-            exerciseMapping: result.exercise_mapping ?? {},
-          });
+          // F-S4-02 (narrow re-review): ordering/fail-closed invariant lives
+          // in session-start.ts, tested independently of this screen's other
+          // concerns — see beginOnlineSession's own doc comment.
+          await beginOnlineSession(
+            { sessionId: result.session_id, exerciseMapping: result.exercise_mapping ?? {} },
+            {
+              persistHandshake: (h) => offlineOutboxService.persistHandshake(correlationId, h),
+              onReady: (h) => {
+                if (!cancelled) setSessionId(h.sessionId, h.exerciseMapping);
+              },
+              onError: (err) => {
+                if (!cancelled) setError(describeError(err));
+              },
+            },
+          );
         }
       } else {
         await offlineOutboxService.enqueueGranular({

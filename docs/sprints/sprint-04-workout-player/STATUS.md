@@ -1,8 +1,8 @@
 # Sprint 4: Workout Player & Durable SQLite Offline Outbox — engineering status
 
-> **Status: F-S4-02 REWORK COMPLETE — READY FOR RE-REVIEW.** Not yet accepted; no tag. Per the standing workflow, the
-> Executor never self-approves. This report and [ACCEPTANCE.md](ACCEPTANCE.md) are the evidence package for the
-> ChatGPT Reviewer's implementation/evidence acceptance review.
+> **Status: F-S4-02 NARROW RE-REVIEW FIX COMPLETE — READY FOR RE-REVIEW.** Not yet accepted; no tag. Per the standing
+> workflow, the Executor never self-approves. This report and [ACCEPTANCE.md](ACCEPTANCE.md) are the evidence package
+> for the ChatGPT Reviewer's implementation/evidence acceptance review.
 >
 > **Reviewer gate history:**
 > 1. Implementation submitted for review (commits through `435337c`).
@@ -12,10 +12,19 @@
 >    could not recover across an app/process restart, eventually dead-lettering. Section 11 architecture, F-S4-01,
 >    F-S4-P13, F-S4-P14, permissions, RLS and server mutation semantics were explicitly NOT reopened, and were not
 >    touched by this fix.
-> 3. F-S4-02 fixed: the handshake is now part of the durable `OutboxStorage` contract itself (`session_handshakes` —
->    a SQLite table / a second IndexedDB store), never an in-process cache. Two new Jest tests reproduce the
->    Reviewer's exact restart scenario; a mutation-testing pass confirmed they fail against the original bug and pass
->    against the fix. See §2 (finding) and §3 (evidence).
+> 3. F-S4-02 fixed (commit `03e634f`): the handshake is now part of the durable `OutboxStorage` contract itself
+>    (`session_handshakes` — a SQLite table / a second IndexedDB store), never an in-process cache. Two new Jest
+>    tests reproduce the Reviewer's exact restart scenario; a mutation-testing pass confirmed they fail against the
+>    original bug and pass against the fix.
+> 4. Reviewer narrow re-review verdict: **FAIL — one remaining race.** The storage/service layer was sound, but
+>    `workout/active.tsx` called `setSessionId()` (synchronously exposing the player as ready) **before** awaiting
+>    `persistHandshake()`, and never handled a rejection — a narrower instance of the same defect class, purely in
+>    the UI's own ordering.
+> 5. Fixed (commit below): the ordering/fail-closed invariant was extracted into its own testable function,
+>    `beginOnlineSession()`; `active.tsx` now awaits the durable write before exposing the session as ready, and
+>    fails closed (surfaces an error, never calls `setSessionId`) if it rejects. 3 new Jest tests prove the ordering
+>    and the fail-closed behavior directly; mutation-tested against the original ordering. See §2 (finding) and §3
+>    (evidence).
 
 - **Baseline:** Roadmap v1.2 (`implementation_plan.md`) Section 11 — Sprint 4 Ordered Engineering Backlog, Schemas &
   Acceptance Slices, Tasks 4.0–4.15.
@@ -60,30 +69,37 @@
   in-process `Map`, not durably persisted; a queued `RECORD_SET` / `SUBSTITUTE_EXERCISE` mutation still `pending`
   after its session's `START_SESSION` row had already synced could not recover across an app/process restart and
   would eventually dead-letter. Fixed by making the handshake part of the durable `OutboxStorage` contract itself
-  (a `session_handshakes` SQLite table / second IndexedDB store), never an in-process cache. Section 11 architecture,
-  F-S4-01, F-S4-P13, F-S4-P14, permissions, RLS and server mutation semantics were not touched.
+  (a `session_handshakes` SQLite table / second IndexedDB store), never an in-process cache. A **narrow re-review
+  follow-up** on the same finding then caught one remaining instance of the same race purely in `active.tsx`'s own
+  ordering: it exposed the Workout Player as ready (`setSessionId`, synchronous) *before* the durable write was
+  awaited, and never handled a rejection. Fixed by extracting the ordering/fail-closed invariant into its own tested
+  function (`beginOnlineSession()` in `session-start.ts`). Section 11 architecture, F-S4-01, F-S4-P13, F-S4-P14,
+  permissions, RLS and server mutation semantics were not touched by either round of this fix.
 
 No ADR was needed for either finding: both are implementation corrections to how the frozen Section 11 requirement
 and the client's own stated durability guarantee are realized, not behavior or scope changes.
 
 ## 3. Offline verification
 
-`npm run verify` (typecheck + lint + Jest + `test:scripts` + `db:verify`), after the F-S4-02 fix:
+`npm run verify` (typecheck + lint + Jest + `test:scripts` + `db:verify`), after the F-S4-02 narrow re-review fix:
 
 ```
 Typecheck:  0 errors
 Lint:       0 errors, 0 warnings
-Jest:       8 suites, 95 tests passed (+25 new: session-player.test.ts 20, outbox-sync.test.ts 5 [3 original + 2 F-S4-02 recovery tests])
-db:verify:  12 files, 508 assertions, 0 failed (unaffected — F-S4-02 is a client-only fix, no migration/SQL changed)
+Jest:       9 suites, 98 tests passed (+28 new: session-player.test.ts 20, outbox-sync.test.ts 5 [3 original + 2
+            F-S4-02 recovery tests], session-start.test.ts 3 [F-S4-02 narrow re-review ordering/fail-closed tests])
+db:verify:  12 files, 508 assertions, 0 failed (unaffected — both F-S4-02 fixes are client-only, no migration/SQL changed)
 ```
 
 `db:verify` file breakdown: `001`–`010` (Sprints 1–3, unchanged, 443 total) + `011_workout_sessions_schema` (35) +
 `012_workout_execution_and_outbox` (30) = 508.
 
-A mutation-testing pass (temporarily reverting `persistHandshake`/`getHandshake` in `outbox-sync.ts` back to an
-in-process `Map`, i.e. exactly the original bug) confirmed the two new F-S4-02 tests fail against the reverted code
-with precisely the Reviewer's described symptom, and pass again once the fix is restored — the regression tests are
-real, not tautologies.
+Two mutation-testing passes confirmed both rounds of the regression tests are real, not tautologies: (1) temporarily
+reverting `persistHandshake`/`getHandshake` in `outbox-sync.ts` back to an in-process `Map` (the original bug) made
+both `outbox-sync.test.ts` restart-recovery tests fail with precisely the Reviewer's described symptom; (2)
+temporarily reverting `beginOnlineSession()` to call `onReady` before awaiting `persistHandshake` and leaving its
+rejection unhandled (the narrow-re-review bug) made all three `session-start.test.ts` tests fail. Both pass again
+once their respective fixes are restored.
 
 The `outbox-sync.test.ts` suite includes the Section 11 acceptance scenario verbatim: offline start → offline
 `RECORD_SET` → reconnect (`processQueue()`) → `START_SESSION` dispatches first and hands back the `session_id` +
@@ -102,6 +118,9 @@ unresolved `START_SESSION`); a third proves the 5-attempt dead-letter threshold 
   (substitutions/logged sets keyed by the immutable `workout_item_id`, never a server-generated
   `session_exercise_id`) across the active-workout and summary screens, since Expo Router unmounts a screen on
   navigation. See §9's scope note on what this does and does not persist.
+- `src/features/workouts/session-start.ts` — **F-S4-02 narrow re-review**: `beginOnlineSession()` isolates the
+  online-start ordering/fail-closed invariant (durable handshake write must succeed before the session is exposed as
+  ready) so it's directly unit-testable, independent of `workout/active.tsx`'s other concerns. **3 Jest tests.**
 - `src/services/storage/` — `outbox-types.ts` (shared shape, incl. `SessionHandshake` and the
   `saveHandshake`/`getHandshake` contract added by F-S4-02), `sqlite-outbox.ts` (native, `expo-sqlite`; the
   `offline_mutations` table plus a `session_handshakes` table), `web-outbox.ts` (web, IndexedDB with a second
@@ -260,6 +279,11 @@ left open:
   [run 36329178710](https://github.com/carvele/bacalsys/actions/runs/36329178710): **green**.
 - Commit [`03e634f`](https://github.com/carvele/bacalsys/commit/03e634f) — the **F-S4-02 fix** (Reviewer gate rework).
   CI [run 36330960227](https://github.com/carvele/bacalsys/actions/runs/36330960227): **green**.
+- Commit [`6f46e90`](https://github.com/carvele/bacalsys/commit/6f46e90) — F-S4-02 rework evidence (ACCEPTANCE.md +
+  CI confirmation). CI [run 36331210108](https://github.com/carvele/bacalsys/actions/runs/36331210108): **green**.
+- Commit `<pending>` — the **F-S4-02 narrow re-review fix**: `active.tsx` ordering/fail-closed correction via
+  `beginOnlineSession()` (new `session-start.ts` + 3 Jest tests), the finding-doc follow-up section, and this
+  STATUS.md/ACCEPTANCE.md update. CI run `<pending>` — to be filled in once pushed.
 - **Web smoke check**: opened the live deployment (`https://carvele.github.io/bacalsys/`, rebuilt by each of the runs
   above) in a browser under the product owner's own already-signed-in session — home screen and the "Workout
   routines" → "My routines" catalog screen both render with zero console errors. No mutating action was taken (no
