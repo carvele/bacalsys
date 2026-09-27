@@ -1,18 +1,20 @@
 # Sprint 3: Workout Builder with Set-Level Prescription — engineering status
 
-> **Status: READY FOR REVIEWER GATE (rework applied).** Planning was approved by the Reviewer ("Sprint 3 planning
-> verdict: ACCEPTED — READY FOR CLAUDE EXECUTION"). The first implementation-acceptance submission came back
-> **REWORK REQUIRED** (F-S3-03, F-S3-04, below); both are fixed and re-verified. Sprint 3 is **not** tagged
-> accepted — that requires the Reviewer's approval, relayed by the product owner.
+> **Status: ACCEPTED (2026-09-27).** Reviewer approval was relayed by the product owner after independent
+> verification of the remediation in the repository, CI, and the live hosted database. See
+> [ACCEPTANCE.md](ACCEPTANCE.md). Tag `sprint-03-accepted`.
 >
 > **Reviewer gate history:**
-> 1. Implementation submitted (commit `da8927f`) — deployed, product owner ran the signed-in click-through, all 5
+> 1. Planning approved ("Sprint 3 planning verdict: ACCEPTED — READY FOR CLAUDE EXECUTION").
+> 2. Implementation submitted (commit `da8927f`) — deployed, product owner ran the signed-in click-through, all 5
 >    steps passed.
-> 2. Reviewer verdict: **REWORK REQUIRED** — the payload limits and compound-block cardinality had drifted from the
+> 3. Reviewer verdict: **REWORK REQUIRED** — the payload limits and compound-block cardinality had drifted from the
 >    frozen values (F-S3-03, F-S3-04). No architecture, D1–D5, RLS, immutability, grants, or org isolation was to be
 >    touched.
-> 3. Forward migration `20260927103524_workout_payload_limits_and_compound_block_cardinality` applied; client
->    validation, pgTAP and Jest regressions added; hosted probes and advisors re-run. See §2 and §9.
+> 4. Forward migration `20260927103524_workout_payload_limits_and_compound_block_cardinality` applied; client
+>    validation, pgTAP and Jest regressions added; hosted probes and advisors re-run (commit `c5a4eb8`).
+> 5. Reviewer verdict: **ACCEPTED — READY TO CLOSE**. F-S3-03 and F-S3-04 independently confirmed closed against
+>    the live hosted database, CI run 36314719808, and the repository.
 
 - **Baseline:** Roadmap v1.2 (`implementation_plan.md`) Section 10 — Sprint 3 Ordered Engineering Backlog, Schemas &
   Acceptance Slices, Decision D5, Tasks 3.0–3.14.
