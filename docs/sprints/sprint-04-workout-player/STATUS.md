@@ -281,9 +281,10 @@ left open:
   CI [run 36330960227](https://github.com/carvele/bacalsys/actions/runs/36330960227): **green**.
 - Commit [`6f46e90`](https://github.com/carvele/bacalsys/commit/6f46e90) — F-S4-02 rework evidence (ACCEPTANCE.md +
   CI confirmation). CI [run 36331210108](https://github.com/carvele/bacalsys/actions/runs/36331210108): **green**.
-- Commit `<pending>` — the **F-S4-02 narrow re-review fix**: `active.tsx` ordering/fail-closed correction via
-  `beginOnlineSession()` (new `session-start.ts` + 3 Jest tests), the finding-doc follow-up section, and this
-  STATUS.md/ACCEPTANCE.md update. CI run `<pending>` — to be filled in once pushed.
+- Commit [`4b7da12`](https://github.com/carvele/bacalsys/commit/4b7da12) — the **F-S4-02 narrow re-review fix**:
+  `active.tsx` ordering/fail-closed correction via `beginOnlineSession()` (new `session-start.ts` + 3 Jest tests),
+  the finding-doc follow-up section, and this STATUS.md/ACCEPTANCE.md update. CI
+  [run 36332796594](https://github.com/carvele/bacalsys/actions/runs/36332796594): **green**.
 - **Web smoke check**: opened the live deployment (`https://carvele.github.io/bacalsys/`, rebuilt by each of the runs
   above) in a browser under the product owner's own already-signed-in session — home screen and the "Workout
   routines" → "My routines" catalog screen both render with zero console errors. No mutating action was taken (no
