@@ -42,7 +42,11 @@ const LABELS: Record<string, string> = {
   added: 'Added',
   assisted: 'Assisted',
 };
-export const labelFor = (value: string) => LABELS[value] ?? value.charAt(0).toUpperCase() + value.slice(1);
+export const labelFor = (value: string) =>
+  LABELS[value] ??
+  value
+    .replace(/_/g, ' ')
+    .replace(/^\w/, (c) => c.toUpperCase());
 
 /** Measurement modes that an exercise's `measurement_types` (which also includes `'amrap'`) can offer as an item mode. */
 export const itemModesFor = (measurementTypes: string[]): MeasurementMode[] =>

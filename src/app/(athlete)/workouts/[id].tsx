@@ -164,6 +164,13 @@ export default function WorkoutDetailScreen() {
           )}
         </Card>
 
+        {latest ? (
+          <Button
+            label="Start workout"
+            onPress={() => router.push({ pathname: '/workout/active', params: { versionId: latest.id } })}
+          />
+        ) : null}
+
         {canMutate && !editing ? (
           <View className="flex-row flex-wrap gap-2">
             <Button

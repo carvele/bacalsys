@@ -49,14 +49,15 @@ SELECT is(
   (SELECT perms FROM position_matrix WHERE position = 'Vice President'),
   ARRAY['audit:view', 'coaches:assign', 'exercises:approve', 'members:approve', 'members:invite',
         'members:preassign_position', 'members:view_all', 'positions:assign', 'skills:verify',
-        'training:view_org', 'workout:assign', 'workouts:manage_org', 'workouts:publish_org'],
+        'training:view_org', 'training:view_private_feedback', 'workout:assign', 'workouts:manage_org', 'workouts:publish_org'],
   'Vice President: executive governance set (no President-only governance, D3)'
 );
 SELECT is(
   (SELECT perms FROM position_matrix WHERE position = 'President'),
   ARRAY['audit:view', 'coaches:assign', 'exercises:approve', 'members:approve', 'members:assign_president',
         'members:invite', 'members:preassign_position', 'members:view_all', 'permissions:manage',
-        'positions:assign', 'skills:verify', 'training:view_org', 'workout:assign', 'workouts:manage_org', 'workouts:publish_org'],
+        'positions:assign', 'skills:verify', 'training:view_org', 'training:view_private_feedback',
+        'workout:assign', 'workouts:manage_org', 'workouts:publish_org'],
   'President: executive governance set + President-only governance (D3)'
 );
 SELECT is(

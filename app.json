@@ -39,6 +39,9 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
+      "expo-sqlite",
+      "expo-audio",
+      "expo-notifications",
       [
         "expo-dev-client",
         { "launchMode": "most-recent" }

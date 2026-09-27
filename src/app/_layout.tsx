@@ -11,9 +11,13 @@ import { CenteredSpinner } from '@/components/ui';
 import { hasPermission, OFFICER_PERMISSIONS } from '@/features/auth/access';
 import { useAuth, useAuthBootstrap } from '@/features/auth/use-auth';
 import { queryClient, wireQueryLifecycle } from '@/lib/query-client';
+import { offlineOutboxService } from '@/services/sync/outbox-sync';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 wireQueryLifecycle();
+// Sprint 4 · Task 4.10: opens the durable outbox, recovers any stale
+// 'syncing' rows from a crash, and starts watching connectivity.
+void offlineOutboxService.initialize();
 
 export default function RootLayout() {
   return (

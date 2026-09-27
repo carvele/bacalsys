@@ -16,6 +16,8 @@ export default function AthleteLayout() {
       <Stack.Screen name="workouts/builder" options={{ headerShown: true, title: 'New routine' }} />
       <Stack.Screen name="workouts/[id]" options={{ headerShown: true, title: 'Routine' }} />
       <Stack.Screen name="workouts/version" options={{ headerShown: true, title: 'New version' }} />
+      <Stack.Screen name="workout/active" options={{ headerShown: true, title: 'Workout', gestureEnabled: false }} />
+      <Stack.Screen name="workout/summary" options={{ headerShown: true, title: 'Summary', gestureEnabled: false }} />
     </Stack>
   );
 }
