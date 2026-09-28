@@ -266,7 +266,8 @@ current code still builds, installs and launches.
 - Commit `abbc332` (database layer), `607a28d` (hosted scripts), `761af0b` (client) pushed to `main`. CI
   [run 36408260792](https://github.com/carvele/bacalsys/actions/runs/36408260792) on `761af0b`: **green** (typecheck, lint,
   Jest, script tests, database verification, Pages build & deploy).
-- *(evidence-commit CI run recorded below once pushed)*
+- Commit `a0662dc` (STATUS, ACCEPTANCE, findings) — CI [run 36431053884](https://github.com/carvele/bacalsys/actions/runs/36431053884): **green**.
+- Sprint 5 commits since `sprint-04-accepted` (`6731f31`): `abbc332`, `607a28d`, `761af0b`, `a0662dc` (+ this CI-recording commit).
 
 ## 13. What was not verified
 

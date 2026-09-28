@@ -29,7 +29,7 @@ An item is checked only with the evidence beside it. Detail is in [STATUS.md](ST
 | 19 | Hosted Acceptance Slice 3 — Rule C | ✅ | **13/13** (STATUS §7) |
 | 20 | Client: date/timezone utilities, `AssignWorkoutModal`, Rule C `VersionAdoptionPanel`, athlete "Today's training", coach roster, occurrence-linked player / outbox / bundle | ✅ | STATUS §1, §4; 39 new Jest tests; typecheck, lint, `npm run build:web` |
 | 21 | Hosted advisors | ✅ | No new security findings; no missing-FK-index warnings (STATUS §10) |
-| 22 | CI green for every pushed commit | ✅ | Run [36408260792](https://github.com/carvele/bacalsys/actions/runs/36408260792) on the code commit `761af0b`; the evidence commit's run is recorded in STATUS §12 |
+| 22 | CI green for every pushed commit | ✅ | Run [36408260792](https://github.com/carvele/bacalsys/actions/runs/36408260792) on the code commit `761af0b`; run [36431053884](https://github.com/carvele/bacalsys/actions/runs/36431053884) on the docs commit `a0662dc` (STATUS §12) |
 | 23 | Android dev-client boot | ⚠️ Build / install / launch / no-crash only | Gradle BUILD SUCCESSFUL, `MainActivity` resumed, **0** crash entries for our package. **No visual render confirmation**: the emulator's own `system` process hit an ANR under load and, on the product owner's instruction, the check moved to the web app (STATUS §11) |
 | 24 | Web check of the deployed build | ✅ read-only | Home renders the live "Today's training" card (empty state), 0 console errors, under the product owner's own session; no mutating action |
 | 25 | Signed-in UI click-through of the new screens | ⏳ Pending product owner | Executor may not enter credentials or act on a live personal account |
