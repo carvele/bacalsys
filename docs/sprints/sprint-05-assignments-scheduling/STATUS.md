@@ -323,7 +323,12 @@ in [evidence/](evidence/).
   [run 36408260792](https://github.com/carvele/bacalsys/actions/runs/36408260792) on `761af0b`: **green** (typecheck, lint,
   Jest, script tests, database verification, Pages build & deploy).
 - Commit `a0662dc` (STATUS, ACCEPTANCE, findings) — CI [run 36431053884](https://github.com/carvele/bacalsys/actions/runs/36431053884): **green**.
-- Sprint 5 commits since `sprint-04-accepted` (`6731f31`): `abbc332`, `607a28d`, `761af0b`, `a0662dc` (+ this CI-recording commit).
+- Commit `50add04` (CI-recording follow-up) — CI [run 36431535224](https://github.com/carvele/bacalsys/actions/runs/36431535224): **green**.
+- **Round 2:** commit `f87d807` (F-S5-05 fix + its tests, Android smoke evidence, STATUS/ACCEPTANCE/finding) — CI
+  [run 36441645436](https://github.com/carvele/bacalsys/actions/runs/36441645436): **green** — *Typecheck, lint, unit +
+  database tests* ✅ and *Build & deploy to GitHub Pages* ✅ (both completed).
+- Sprint 5 commits since `sprint-04-accepted` (`6731f31`): `abbc332`, `607a28d`, `761af0b`, `a0662dc`, `50add04`,
+  `f87d807` (+ the docs-only commit that records this line).
 
 ## 13. What was not verified
 
