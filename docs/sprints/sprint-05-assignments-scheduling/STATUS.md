@@ -1,8 +1,11 @@
 # Sprint 5: Assignments & Database-Level Scheduling — engineering status
 
-> **Status: IMPLEMENTATION COMPLETE — READY FOR THE REVIEWER'S ACCEPTANCE GATE.** Not accepted; no tag. Per the
-> standing workflow the Executor never self-approves. This report and [ACCEPTANCE.md](ACCEPTANCE.md) are the evidence
-> package for the ChatGPT Reviewer's independent acceptance gate.
+> **Status: ROUND 2 — F-S5-G01 (Android feature smoke) EVIDENCE SUBMITTED; AWAITING THE REVIEWER'S FINAL SIGN-OFF.**
+> Not accepted; no tag. Round 1 returned *REWORK REQUIRED — verification-only* with a single blocking item, F-S5-G01
+> (Android dev-client feature verification). §11.1 is that evidence. The smoke pass found one real bug —
+> [F-S5-05](findings/F-S5-05-online-start-cancelled-by-its-own-rerender.md), latent since Sprint 4 — which is fixed with a
+> failing-first regression test. No database, RLS, permission or architecture change was made in round 2. Per the
+> standing workflow the Executor never self-approves; [ACCEPTANCE.md](ACCEPTANCE.md) carries the gate rows.
 >
 > **Baseline:** `sprint-04-accepted` (commit `6731f31`). Roadmap v1.2 Section 12, Tasks 5.0–5.15, implemented as frozen.
 > D1–D5 and Sprints 1–4 were not reopened; no ADR was needed (see §2 and §9).
@@ -43,6 +46,8 @@
 | [F-S5-02](findings/F-S5-02-pg-cron-not-installed-on-hosted.md) | Backlog Refinement | `pg_cron` was available but not installed on hosted; the migration enables it (only when available) ahead of the unchanged fail-loud `0A000` guard. |
 | [F-S5-03](findings/F-S5-03-offline-bundle-vs-rule-c-version-drift.md) | Backlog Refinement (**open decision for the Planner**) | An offline workout whose `upcoming` occurrence was Rule-C-migrated while the athlete was offline fails `22000` (literal frozen contract). Options A/B/C written up; none taken. |
 | [F-S5-04](findings/F-S5-04-recurring-schedule-timezone-copy-can-go-stale.md) | Backlog Refinement | `recurring_schedules.timezone` is a write-time copy; the generator reads the authoritative `organizations.timezone`, so behaviour is correct. |
+
+| [F-S5-05](findings/F-S5-05-online-start-cancelled-by-its-own-rerender.md) | Bug (found by the Android smoke gate F-S5-G01; **latent since Sprint 4**) | The Workout Player's start effect depended on `activeSession`; `begin()` changed it, the effect's own cleanup cancelled the in-flight start, and the response (session already created server-side) was discarded — the screen hung on "Starting your workout…". Fixed by extracting `useSessionStart` (cancellation only on unmount; `startedRef` guarantees one start) with 5 failing-first tests. |
 
 No finding needed an ADR; no ADR was created and no deviation from Section 12's architecture was made.
 
@@ -261,6 +266,57 @@ current code still builds, installs and launches.
   No routine, assignment or session was created and nothing was signed into or out of; a full signed-in click-through of
   the new screens is still pending the product owner. Local `npm run build:web` also passed (§3).
 
+### 11.1 Round 2 — F-S5-G01 Android feature smoke (interactive, on the emulator, against `bacalsys-dev`)
+
+Reviewer requirement: a disposable identity (not a personal account), the app visibly rendering signed in, Today's
+training from the occurrence query, an assigned occurrence opening the player with its occurrence identity, and at least
+one authorized assignment surface rendered *and* interacted with, with screenshots and a logcat result. Screenshots are
+in [evidence/](evidence/).
+
+- **Setup.** AVD `Pixel_4`, dev client built in round 1, Metro started with the **hosted** URL and public anon key
+  exported for that process (the repo's `.env.local` points at `127.0.0.1:54321`, a local stack that does not exist here;
+  it produced a generic "Something went wrong" on the first sign-in attempt and is unchanged). Identities: the tagged,
+  disposable e2e fixtures `athletea…` and `coacha…` (`@e2e.bacalsys.local`). **The product owner typed both sign-ins**;
+  the Executor did not enter credentials.
+- **Athlete pass.**
+
+  | Check | Result | Evidence |
+  |---|---|---|
+  | App renders (signed out) with no red screen | ✅ | `android-01-login-rendered.png` |
+  | Signed-in athlete home renders; **Today's training** lists today's occurrences (Upcoming / Completed, version chips, coach note) from the live occurrence query under RLS | ✅ | `android-02-athlete-home-todays-training.png` |
+  | **Start workout** on an upcoming occurrence opens the player | ❌ first attempt — hung on the spinner ([F-S5-05](findings/F-S5-05-online-start-cancelled-by-its-own-rerender.md)); ✅ after the fix, the player opens into the exercise (Push-up, *Set 1 · target 14 reps*) | `android-03-…BEFORE-fix.png`, `android-04-…AFTER-fix.png` |
+  | The player is bound to the tapped occurrence (occurrence identity) | ✅ server-side: occurrence `88ef979a…` `in_progress`, **exactly 1** linked session (`assignment_occurrence_id` set), session version = occurrence version, athlete has exactly 1 active session. (The route param is not logged; the persisted link is the proof.) | query result quoted in F-S5-05 / ACCEPTANCE #30 |
+  | Today's training reflects state change | ✅ the same occurrence now shows **In progress** with **Resume workout** | `android-05-todays-training-in-progress-resume.png` |
+
+- **Coach pass (Coach A).**
+
+  | Check | Result | Evidence |
+  |---|---|---|
+  | Coach home renders (Coaching, Officer tools) | ✅ | `android-06-coach-home.png` |
+  | My athletes: per-athlete upcoming count and next date (57 / 15 upcoming, next *Mon, Sep 28*) and an **Assign workout** button each | ✅ | `android-07-my-athletes-roster.png` |
+  | **AssignWorkoutModal** renders (routine picker, athlete picker preselected to the tapped athlete, Schedule, Version, Notes) | ✅ | `android-08-assign-workout-modal.png` |
+  | Interaction: choose a routine, add a second athlete (*2 selected*), Single date (defaults to the organization's today, 2026-09-28), version chips Latest/v3/v2/v1, toggle **Recurring** → weekday chips, start/end date, "scheduled two weeks ahead in Asia/Manila" hint | ✅ | `android-09`, `android-10`, `android-11` |
+
+- **Logcat.** The `crash` buffer holds **0** entries for `ph.bacalsys.app` across the whole session. `ReactNativeJS`
+  errors: none after the final reload (~14:56 UTC). One `ReferenceError: Property 'sessionStartDeps' doesn't exist`
+  (14:53:07 UTC) is **not** an app defect: Fast Refresh hot-loaded `active.tsx` while I was mid-edit on the F-S5-05 fix,
+  before the constant was added. The emulator's own System UI showed one "isn't responding" dialog at first launch
+  (Metro/emulator cold start on a 2 GB AVD), dismissed with *Wait*; it did not recur.
+- **Fix verified.** Jest **15 suites / 150 tests** (was 14 / 145), Node **2 / 9**, typecheck 0, lint 0, offline pgTAP
+  **15 files / 646** (unchanged), `npm run build:web` passes — all re-run after the fix.
+- **Executor-side data actions (disclosed).** The failed first attempt left the athlete with an orphaned `in_progress`
+  session; I closed it through the real `complete_workout_session` RPC (status `abandoned`, 0 sets → occurrence
+  `abandoned`) by setting the athlete's JWT claims in a hosted SQL transaction — the same technique as the pgTAP `act`
+  helper, no password involved. It is disposable fixture data. The second occurrence's session (`dfab087d…`) was left
+  `in_progress` by the pass and is likewise fixture data.
+- **Not covered by this pass (stated plainly).** (a) The Rule C `VersionAdoptionPanel` was **not** exercised on the
+  device — the Reviewer accepted either surface, and `AssignWorkoutModal` was. (b) The Assign modal was **not
+  submitted**, so create-from-UI on Android is unproven; creation is proven by hosted Slice 1 and the RPC tests. (c) In
+  the player I did not log a set or finish the workout on the device (a stray Back key left the player before the set
+  logged), so the on-device `in_progress → terminal` path is unproven; the server-side transition is proven by pgTAP
+  014, hosted Slice 2, and by the RPC closing the orphan above. (d) Offline mode on the device was not exercised (the
+  hook's offline branch is covered by a Jest test). (e) iOS not run.
+
 ## 12. Deployment & CI
 
 - Commit `abbc332` (database layer), `607a28d` (hosted scripts), `761af0b` (client) pushed to `main`. CI
@@ -272,10 +328,10 @@ current code still builds, installs and launches.
 ## 13. What was not verified
 
 - **`supabase test db` / local stack**: Docker unavailable — waived (Sprints 1–4).
-- **Signed-in UI click-through** of the new screens (`AssignWorkoutModal`, `VersionAdoptionPanel`, Today's training,
-  coach roster): not performed by the Executor (credential / live-account rule). The screens' logic is extracted into
-  tested modules and the screens are covered by typecheck, lint and the web bundle; **interactive behaviour is pending
-  the product owner**.
+- **Signed-in UI click-through**: *round 2 covered* Today's training, the player start, the coach roster and
+  `AssignWorkoutModal` on Android (§11.1), signed in by the product owner. **Still not exercised on a device:** the Rule C
+  `VersionAdoptionPanel`, submitting the Assign modal, logging a set / finishing a workout from the player, and offline
+  mode. Web click-through by a signed-in human is likewise not done.
 - **Hosted fixture cleanup** not executed (product owner's call); the sprint's hosted fixtures and assignments remain.
 - **Mixed online/offline-in-one-session completion** and **process-kill draft recovery**: unchanged Sprint 4 gaps.
 - **F-S5-03** (offline workout vs Rule C version drift): implemented as the literal frozen contract; the fallback

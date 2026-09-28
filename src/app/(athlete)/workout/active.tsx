@@ -1,6 +1,6 @@
 import { onlineManager, useQuery } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -13,8 +13,8 @@ import {
   buildSetPayload,
   type ActualSetDraft,
 } from '@/features/workouts/session-player';
-import { beginOnlineSession } from '@/features/workouts/session-start';
 import { useWorkoutSessionStore } from '@/features/workouts/session-store';
+import { useSessionStart, type SessionStartDeps } from '@/features/workouts/use-session-start';
 import { resolveWorkoutScreenState } from '@/features/workouts/workout-screen-state';
 import { labelFor, summarizeSet, type MeasurementMode } from '@/features/workouts/workout-builder';
 import { useRestTimer } from '@/hooks/useRestTimer';
@@ -23,6 +23,35 @@ import { randomId } from '@/lib/random-id';
 import { supabase } from '@/lib/supabase';
 import { offlineOutboxService } from '@/services/sync/outbox-sync';
 import type { Json } from '@/types/database';
+
+/** The real connectivity / Supabase / outbox behind the Workout Player's start (see useSessionStart). */
+const sessionStartDeps: SessionStartDeps = {
+  isOnline: () => onlineManager.isOnline(),
+  startRemote: async ({ versionId, idempotencyKey, occurrenceId }) => {
+    const { data, error } = occurrenceId
+      ? await supabase.rpc('start_workout_session', {
+          p_workout_version_id: versionId,
+          p_idempotency_key: idempotencyKey,
+          p_assignment_occurrence_id: occurrenceId,
+        })
+      : await supabase.rpc('start_workout_session', {
+          p_workout_version_id: versionId,
+          p_idempotency_key: idempotencyKey,
+        });
+    return { data, error };
+  },
+  persistHandshake: (correlationId, handshake) => offlineOutboxService.persistHandshake(correlationId, handshake),
+  enqueueOfflineStart: ({ correlationId, versionId, occurrenceId }) =>
+    offlineOutboxService.enqueueGranular({
+      id: correlationId,
+      sessionCorrelationId: correlationId,
+      mutationType: 'START_SESSION',
+      entityId: versionId,
+      payload: { workout_version_id: versionId, assignment_occurrence_id: occurrenceId },
+    }),
+  newIdempotencyKey: randomId,
+  describeError: (error) => describeError(error),
+};
 
 /**
  * Sprint 4 · Task 4.13 — Interactive Workout Player.
@@ -36,8 +65,6 @@ import type { Json } from '@/types/database';
 export default function ActiveWorkoutScreen() {
   const { versionId, occurrenceId } = useLocalSearchParams<{ versionId: string; occurrenceId?: string }>();
   const activeSession = useWorkoutSessionStore((s) => s.active);
-  const begin = useWorkoutSessionStore((s) => s.begin);
-  const setSessionId = useWorkoutSessionStore((s) => s.setSessionId);
   const addSubstitution = useWorkoutSessionStore((s) => s.addSubstitution);
   const addLoggedSet = useWorkoutSessionStore((s) => s.addLoggedSet);
 
@@ -87,64 +114,16 @@ export default function ActiveWorkoutScreen() {
     [hierarchy.data],
   );
 
-  // Begin (or resume) the session once the hierarchy is known. `activeSession`
-  // itself (a Zustand store, not React state) is the loading signal below —
-  // no separate "starting" state, so nothing here calls a React setState
-  // synchronously inside the effect body (react-hooks/set-state-in-effect).
-  useEffect(() => {
-    if (!versionId || hierarchy.isLoading || activeSession) return;
-    let cancelled = false;
-    (async () => {
-      const assignmentOccurrenceId = occurrenceId || null; // Sprint 5: an assigned workout carries its occurrence
-      const correlationId = begin(versionId, assignmentOccurrenceId);
-      const idempotencyKey = randomId();
-      if (onlineManager.isOnline()) {
-        const { data, error: startError } = assignmentOccurrenceId
-          ? await supabase.rpc('start_workout_session', {
-              p_workout_version_id: versionId,
-              p_idempotency_key: idempotencyKey,
-              p_assignment_occurrence_id: assignmentOccurrenceId,
-            })
-          : await supabase.rpc('start_workout_session', {
-              p_workout_version_id: versionId,
-              p_idempotency_key: idempotencyKey,
-            });
-        if (cancelled) return;
-        if (startError) {
-          setError(describeError(startError));
-        } else {
-          const result = data as { session_id: string; exercise_mapping: Record<string, string> };
-          // F-S4-02 (narrow re-review): ordering/fail-closed invariant lives
-          // in session-start.ts, tested independently of this screen's other
-          // concerns — see beginOnlineSession's own doc comment.
-          await beginOnlineSession(
-            { sessionId: result.session_id, exerciseMapping: result.exercise_mapping ?? {} },
-            {
-              persistHandshake: (h) => offlineOutboxService.persistHandshake(correlationId, h),
-              onReady: (h) => {
-                if (!cancelled) setSessionId(h.sessionId, h.exerciseMapping);
-              },
-              onError: (err) => {
-                if (!cancelled) setError(describeError(err));
-              },
-            },
-          );
-        }
-      } else {
-        await offlineOutboxService.enqueueGranular({
-          id: correlationId,
-          sessionCorrelationId: correlationId,
-          mutationType: 'START_SESSION',
-          entityId: versionId,
-          payload: { workout_version_id: versionId, assignment_occurrence_id: assignmentOccurrenceId },
-        });
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [versionId, hierarchy.isLoading, activeSession]);
+  // Begin (or resume) the session once the hierarchy is known. The effect lives
+  // in useSessionStart (F-S5-05: a start in flight must survive the re-render
+  // that begin() itself causes; only unmounting may discard its result).
+  useSessionStart({
+    versionId,
+    occurrenceId,
+    hierarchyLoading: hierarchy.isLoading,
+    onStartError: setError,
+    deps: sessionStartDeps,
+  });
 
   // Online: wait for the session_id to come back before allowing any action
   // (a set/substitution logged too early would wrongly fall through to the
