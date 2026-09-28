@@ -107,6 +107,40 @@ describe('OfflineOutboxService (Task 4.10)', () => {
     expect(pending.every((m) => m.syncStatus === 'synced')).toBe(true);
   });
 
+  it('Sprint 5: an assigned START_SESSION replays through the 3-arg RPC (linking its occurrence); a direct one keeps the 2-arg call', async () => {
+    const service = createOfflineOutboxService(webOutbox);
+    await webOutbox.init();
+    supabase.rpc.mockImplementation(() =>
+      Promise.resolve({ data: { session_id: 'server-session-x', exercise_mapping: {} }, error: null }),
+    );
+
+    await service.enqueueGranular({
+      id: 'corr-assigned',
+      sessionCorrelationId: 'corr-assigned',
+      mutationType: 'START_SESSION',
+      entityId: 'version-1',
+      payload: { workout_version_id: 'version-1', assignment_occurrence_id: 'occ-42' },
+    });
+    await service.processQueue();
+    expect(supabase.rpc).toHaveBeenCalledWith('start_workout_session', {
+      p_workout_version_id: 'version-1',
+      p_idempotency_key: 'corr-assigned',
+      p_assignment_occurrence_id: 'occ-42',
+    });
+
+    supabase.rpc.mockClear();
+    await service.enqueueGranular({
+      id: 'corr-direct',
+      sessionCorrelationId: 'corr-direct',
+      mutationType: 'START_SESSION',
+      entityId: 'version-1',
+      payload: { workout_version_id: 'version-1', assignment_occurrence_id: null },
+    });
+    await service.processQueue();
+    expect(supabase.rpc).toHaveBeenCalledWith('start_workout_session', { p_workout_version_id: 'version-1', p_idempotency_key: 'corr-direct' });
+    expect(supabase.rpc.mock.calls[0][1]).not.toHaveProperty('p_assignment_occurrence_id');
+  });
+
   it('causal dependency blocking: a RECORD_SET never dispatches before its session has a resolved session_id', async () => {
     const service = createOfflineOutboxService(webOutbox);
     await webOutbox.init();

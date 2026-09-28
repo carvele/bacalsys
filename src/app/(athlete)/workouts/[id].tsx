@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AssignWorkoutModal } from '@/components/AssignWorkoutModal';
 import { Button, Card, CenteredSpinner, Notice, TextField } from '@/components/ui';
 import { hasPermission } from '@/features/auth/access';
 import { useAuth } from '@/features/auth/use-auth';
@@ -23,6 +24,7 @@ export default function WorkoutDetailScreen() {
   const queryClient = useQueryClient();
   const [message, setMessage] = useState<{ tone: 'success' | 'danger'; text: string } | null>(null);
   const [editing, setEditing] = useState(false);
+  const [assigning, setAssigning] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
 
@@ -171,6 +173,10 @@ export default function WorkoutDetailScreen() {
           />
         ) : null}
 
+        {latest && hasPermission(access, 'workout:assign') ? (
+          <Button label="Assign to athletes" variant="secondary" onPress={() => setAssigning(true)} />
+        ) : null}
+
         {canMutate && !editing ? (
           <View className="flex-row flex-wrap gap-2">
             <Button
@@ -244,6 +250,7 @@ export default function WorkoutDetailScreen() {
           </Card>
         ) : null}
       </ScrollView>
+      {assigning ? <AssignWorkoutModal visible templateId={template.id} onClose={() => setAssigning(false)} /> : null}
     </SafeAreaView>
   );
 }

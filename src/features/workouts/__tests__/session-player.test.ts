@@ -176,6 +176,31 @@ describe('buildOfflineBundle (Task 4.5 wire format)', () => {
   });
 });
 
+describe('buildOfflineBundle occurrence identity (Sprint 5, F-S5-P03)', () => {
+  const input = {
+    sessionCorrelationId: 'corr-1',
+    existingSessionId: null,
+    workoutVersionId: 'ver-1',
+    status: 'completed' as const,
+    abandonmentReasonCode: null,
+    startedAt: '2026-01-01T00:00:00.000Z',
+    completedAt: '2026-01-01T00:20:00.000Z',
+    substitutions: [],
+    sets: [],
+    feedback: null,
+    privateFeedback: null,
+  };
+  it('carries assignment_occurrence_id when the session executes an assigned occurrence', () => {
+    expect(buildOfflineBundle({ ...input, assignmentOccurrenceId: 'occ-7' })).toMatchObject({ assignment_occurrence_id: 'occ-7' });
+  });
+  it('sends an explicit null for a direct, unassigned session (never omits the key)', () => {
+    const direct = buildOfflineBundle({ ...input, assignmentOccurrenceId: null }) as Record<string, unknown>;
+    expect(direct).toHaveProperty('assignment_occurrence_id', null);
+    const omitted = buildOfflineBundle(input) as Record<string, unknown>;
+    expect(omitted).toHaveProperty('assignment_occurrence_id', null);
+  });
+});
+
 describe('summarizeActual', () => {
   it('summarizes a completed set and flags an incomplete one', () => {
     expect(summarizeActual('reps', setWith({ actualReps: '10' }))).toBe('10 reps');

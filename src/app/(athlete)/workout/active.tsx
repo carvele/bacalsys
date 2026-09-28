@@ -34,7 +34,7 @@ import type { Json } from '@/types/database';
  * the same server functions eventually.
  */
 export default function ActiveWorkoutScreen() {
-  const { versionId } = useLocalSearchParams<{ versionId: string }>();
+  const { versionId, occurrenceId } = useLocalSearchParams<{ versionId: string; occurrenceId?: string }>();
   const activeSession = useWorkoutSessionStore((s) => s.active);
   const begin = useWorkoutSessionStore((s) => s.begin);
   const setSessionId = useWorkoutSessionStore((s) => s.setSessionId);
@@ -95,13 +95,20 @@ export default function ActiveWorkoutScreen() {
     if (!versionId || hierarchy.isLoading || activeSession) return;
     let cancelled = false;
     (async () => {
-      const correlationId = begin(versionId);
+      const assignmentOccurrenceId = occurrenceId || null; // Sprint 5: an assigned workout carries its occurrence
+      const correlationId = begin(versionId, assignmentOccurrenceId);
       const idempotencyKey = randomId();
       if (onlineManager.isOnline()) {
-        const { data, error: startError } = await supabase.rpc('start_workout_session', {
-          p_workout_version_id: versionId,
-          p_idempotency_key: idempotencyKey,
-        });
+        const { data, error: startError } = assignmentOccurrenceId
+          ? await supabase.rpc('start_workout_session', {
+              p_workout_version_id: versionId,
+              p_idempotency_key: idempotencyKey,
+              p_assignment_occurrence_id: assignmentOccurrenceId,
+            })
+          : await supabase.rpc('start_workout_session', {
+              p_workout_version_id: versionId,
+              p_idempotency_key: idempotencyKey,
+            });
         if (cancelled) return;
         if (startError) {
           setError(describeError(startError));
@@ -129,7 +136,7 @@ export default function ActiveWorkoutScreen() {
           sessionCorrelationId: correlationId,
           mutationType: 'START_SESSION',
           entityId: versionId,
-          payload: { workout_version_id: versionId },
+          payload: { workout_version_id: versionId, assignment_occurrence_id: assignmentOccurrenceId },
         });
       }
     })();

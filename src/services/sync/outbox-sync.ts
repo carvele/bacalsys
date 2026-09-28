@@ -133,11 +133,19 @@ export function createOfflineOutboxService(storage: OutboxStorage = outboxStorag
     try {
       switch (mutation.mutationType) {
         case 'START_SESSION': {
-          const payload = mutation.payload as { workout_version_id: string };
-          const { data, error } = await supabase.rpc('start_workout_session', {
-            p_workout_version_id: payload.workout_version_id,
-            p_idempotency_key: mutation.id,
-          });
+          const payload = mutation.payload as { workout_version_id: string; assignment_occurrence_id?: string | null };
+          // Sprint 5: an assigned start replays through the 3-arg overload so the session links to its
+          // occurrence; a direct start keeps the exact 2-arg call Sprint 4 shipped.
+          const { data, error } = payload.assignment_occurrence_id
+            ? await supabase.rpc('start_workout_session', {
+                p_workout_version_id: payload.workout_version_id,
+                p_idempotency_key: mutation.id,
+                p_assignment_occurrence_id: payload.assignment_occurrence_id,
+              })
+            : await supabase.rpc('start_workout_session', {
+                p_workout_version_id: payload.workout_version_id,
+                p_idempotency_key: mutation.id,
+              });
           if (error) throw error;
           const result = data as { session_id: string; exercise_mapping: Record<string, string> };
           // Durably persisted BEFORE this mutation is ever marked 'synced' (below,

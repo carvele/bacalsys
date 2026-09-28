@@ -40,6 +40,8 @@ export interface LoggedSet {
 export interface ActiveSession {
   sessionCorrelationId: string;
   workoutVersionId: string;
+  /** Sprint 5: the assigned occurrence this session executes, or null for a direct, unassigned workout. */
+  assignmentOccurrenceId: string | null;
   /** Known once start_workout_session resolves — immediately online, or after a later offline replay. */
   sessionId: string | null;
   exerciseMapping: Record<string, string>;
@@ -50,7 +52,7 @@ export interface ActiveSession {
 
 interface WorkoutSessionState {
   active: ActiveSession | null;
-  begin: (workoutVersionId: string) => string;
+  begin: (workoutVersionId: string, assignmentOccurrenceId?: string | null) => string;
   setSessionId: (sessionId: string, exerciseMapping: Record<string, string>) => void;
   addSubstitution: (sub: SessionSubstitution) => void;
   addLoggedSet: (entry: LoggedSet) => void;
@@ -60,12 +62,13 @@ interface WorkoutSessionState {
 export const useWorkoutSessionStore = create<WorkoutSessionState>((set) => ({
   active: null,
 
-  begin: (workoutVersionId) => {
+  begin: (workoutVersionId, assignmentOccurrenceId = null) => {
     const sessionCorrelationId = randomId();
     set({
       active: {
         sessionCorrelationId,
         workoutVersionId,
+        assignmentOccurrenceId,
         sessionId: null,
         exerciseMapping: {},
         startedAt: new Date().toISOString(),

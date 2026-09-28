@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 
+import { TodaysTrainingCard } from '@/components/TodaysTrainingCard';
 import { Button, Card, Heading, Screen } from '@/components/ui';
 import { hasPermission } from '@/features/auth/access';
 import { useAuth } from '@/features/auth/use-auth';
@@ -38,10 +39,7 @@ export default function AthleteHomeScreen() {
           </View>
         </Card>
 
-        <Card className="gap-2">
-          <Text className="text-title text-ink">Today&apos;s training</Text>
-          <Text className="text-ink-muted">No workouts assigned yet. Your coach&apos;s assignments will appear here.</Text>
-        </Card>
+        <TodaysTrainingCard />
 
         <Card className="gap-3">
           <Text className="text-title text-ink">Exercise library</Text>

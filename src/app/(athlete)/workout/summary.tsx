@@ -118,6 +118,7 @@ export default function WorkoutSummaryScreen() {
         sessionCorrelationId: activeSession.sessionCorrelationId,
         existingSessionId: activeSession.sessionId,
         workoutVersionId: activeSession.workoutVersionId,
+        assignmentOccurrenceId: activeSession.assignmentOccurrenceId,
         status,
         abandonmentReasonCode: status === 'abandoned' ? reasonCode : null,
         startedAt: activeSession.startedAt,

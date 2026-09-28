@@ -194,6 +194,8 @@ export interface OfflineBundleInput {
   sessionCorrelationId: string;
   existingSessionId: string | null;
   workoutVersionId: string;
+  /** Sprint 5: nullable occurrence id (the OfflineSessionBundle wire format's `assignment_occurrence_id`). */
+  assignmentOccurrenceId?: string | null;
   status: 'completed' | 'abandoned';
   abandonmentReasonCode: string | null;
   startedAt: string;
@@ -215,6 +217,7 @@ export function buildOfflineBundle(input: OfflineBundleInput): Json {
     session_correlation_id: input.sessionCorrelationId,
     existing_session_id: input.existingSessionId,
     workout_version_id: input.workoutVersionId,
+    assignment_occurrence_id: input.assignmentOccurrenceId ?? null,
     status: input.status,
     abandonment_reason_code: input.abandonmentReasonCode,
     started_at: input.startedAt,
