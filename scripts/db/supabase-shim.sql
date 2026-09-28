@@ -74,3 +74,29 @@ CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql STABLE AS $$
   )::jsonb
 $$;
 GRANT EXECUTE ON FUNCTION auth.uid(), auth.role(), auth.jwt() TO anon, authenticated, service_role;
+
+-- -----------------------------------------------------------------------------
+-- pg_cron shim (Sprint 5 · Task 5.0). PGlite ships without pg_cron, so this
+-- reproduces exactly the surface BaCalSys migrations use: the `cron` schema, a
+-- `cron.job` registry and `cron.schedule(job_name, schedule, command)` with
+-- pg_cron's upsert-by-name semantics. It never executes a job — tests call the
+-- scheduled functions directly. On a real Supabase project pg_cron is the real
+-- extension and this file is never applied.
+-- -----------------------------------------------------------------------------
+CREATE SCHEMA cron;
+CREATE TABLE cron.job (
+  jobid    bigserial PRIMARY KEY,
+  jobname  text UNIQUE,
+  schedule text NOT NULL,
+  command  text NOT NULL,
+  active   boolean NOT NULL DEFAULT true
+);
+CREATE FUNCTION cron.schedule(job_name text, schedule text, command text) RETURNS bigint
+LANGUAGE plpgsql AS $$
+DECLARE v_id bigint;
+BEGIN
+  INSERT INTO cron.job (jobname, schedule, command) VALUES (job_name, schedule, command)
+  ON CONFLICT (jobname) DO UPDATE SET schedule = excluded.schedule, command = excluded.command, active = true
+  RETURNING jobid INTO v_id;
+  RETURN v_id;
+END $$;

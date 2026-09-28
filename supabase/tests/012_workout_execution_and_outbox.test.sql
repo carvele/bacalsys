@@ -214,7 +214,7 @@ RESET ROLE;
 --    by the hosted concurrency probes; structural check mirrors Sprint 3's 010).
 SELECT ok(
   (SELECT prosrc ~* 'FROM public\.profiles WHERE id = v_uid FOR UPDATE'
-   FROM pg_proc WHERE oid = 'app_private.start_workout_session_internal(uuid, uuid)'::regprocedure)
+   FROM pg_proc WHERE oid = 'app_private.start_workout_session_internal(uuid, uuid, uuid)'::regprocedure)
   AND (SELECT prosrc ~* 'FROM public\.workout_sessions WHERE id = p_session_id FOR UPDATE'
        FROM pg_proc WHERE oid = 'app_private.record_session_set_internal(uuid, uuid, jsonb, uuid)'::regprocedure)
   AND (SELECT prosrc ~* 'FROM public\.workout_sessions WHERE id = p_session_id FOR UPDATE'
