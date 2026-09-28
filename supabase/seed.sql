@@ -22,6 +22,12 @@ VALUES ('00000000-0000-4000-8000-000000000001', 'Bataan Calisthenics', 'bataan-c
 INSERT INTO public.branches (id, organization_id, name, is_default)
 VALUES ('00000000-0000-4000-8000-000000000101', '00000000-0000-4000-8000-000000000001', 'Main Branch', true);
 
+-- Sprint 6: the six default calisthenics skill ladders (28 rungs) for the default
+-- organization. Hosted projects get them from migration 20260929000003 (the
+-- organization already exists there); a fresh database only has its organization
+-- from this point, so the same idempotent function runs here.
+SELECT app_private.seed_default_skill_ladders('00000000-0000-4000-8000-000000000001');
+
 -- -----------------------------------------------------------------------------
 -- Organizational positions (Rule A)
 -- -----------------------------------------------------------------------------
@@ -40,8 +46,9 @@ INSERT INTO public.positions (id, name, rank, description) VALUES
 -- permissions (workouts:publish_org, workouts:manage_org) by
 -- 20260926120420_workout_permissions, and the Sprint 4 permission
 -- (training:view_private_feedback) by
--- 20260927130227_training_view_private_feedback_permission, so they also reach
--- hosted projects; only their position mappings are repeated below.
+-- 20260927130227_training_view_private_feedback_permission, and the Sprint 6
+-- permissions (skills:verify, skills:manage) by 20260929000001_skills_permissions,
+-- so they also reach hosted projects; only their position mappings are repeated below.
 -- -----------------------------------------------------------------------------
 INSERT INTO public.permissions (name, description) VALUES
   ('members:view_all',            'View member profiles and positions across the organization.'),
@@ -50,7 +57,6 @@ INSERT INTO public.permissions (name, description) VALUES
   ('members:preassign_position',  'Pre-assign a position other than Athlete on an invitation.'),
   ('positions:assign',            'Assign and end organizational positions.'),
   ('training:view_org',           'View training records across the organization.'),
-  ('skills:verify',               'Verify or revoke skill achievements.'),
   ('audit:view',                  'Read the audit log.'),
   ('system_roles:view',           'View system role assignments.'),
   ('system_roles:assign',         'Assign and end system roles.'),
@@ -67,6 +73,7 @@ FROM (VALUES
 
   ('Coach',          'members:view_all'),
   ('Coach',          'skills:verify'),
+  ('Coach',          'skills:manage'),
   ('Coach',          'workout:assign'),
   ('Coach',          'exercises:approve'),
   ('Coach',          'workouts:publish_org'),
@@ -81,6 +88,7 @@ FROM (VALUES
   ('Vice President', 'coaches:assign'),
   ('Vice President', 'workout:assign'),
   ('Vice President', 'skills:verify'),
+  ('Vice President', 'skills:manage'),
   ('Vice President', 'audit:view'),
   ('Vice President', 'workouts:publish_org'),
   ('Vice President', 'workouts:manage_org'),
@@ -98,6 +106,7 @@ FROM (VALUES
   ('President',      'members:assign_president'),
   ('President',      'permissions:manage'),
   ('President',      'skills:verify'),
+  ('President',      'skills:manage'),
   ('President',      'audit:view'),
   ('President',      'workouts:publish_org'),
   ('President',      'workouts:manage_org'),

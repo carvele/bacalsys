@@ -67,7 +67,7 @@ SELECT is(
       'audit:view', 'coaches:assign', 'exercises:approve', 'members:approve',
       'members:assign_president', 'members:invite', 'members:preassign_position',
       'members:view_all', 'permissions:manage', 'positions:assign',
-      'skills:verify', 'training:view_org', 'training:view_private_feedback',
+      'skills:manage', 'skills:verify', 'training:view_org', 'training:view_private_feedback',
       'workout:assign', 'workouts:manage_org', 'workouts:publish_org'),
     'is_system_admin', false
   ),
