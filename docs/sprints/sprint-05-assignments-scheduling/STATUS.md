@@ -1,7 +1,14 @@
 # Sprint 5: Assignments & Database-Level Scheduling — engineering status
 
-> **Status: ROUND 2 — F-S5-G01 (Android feature smoke) EVIDENCE SUBMITTED; AWAITING THE REVIEWER'S FINAL SIGN-OFF.**
-> Not accepted; no tag. Round 1 returned *REWORK REQUIRED — verification-only* with a single blocking item, F-S5-G01
+> **Status: ACCEPTED — CLOSED (2026-09-28).** The Reviewer's verdict, relayed by the product owner: *"Sprint 5
+> implementation gate: ACCEPTED — CLOSED."* Accepted head: `f87d807a7486af31e3cb9939c616b90783a52e82`, tagged
+> `sprint-05-accepted`. The Reviewer independently confirmed CI run 36441645436 (both jobs green), the round-2 commit's
+> scope, the Android screenshots, the hosted occurrence/session link and the F-S5-05 fix; F-S5-03 and F-S5-04 remain
+> non-blocking backlog refinements, and Sprint 4 is not reopened. The Reviewer also ruled that submitting the Assign
+> modal, a full on-device workout, the Rule C panel, Android-offline, iOS and hosted-fixture cleanup are **not** Sprint 5
+> blockers (they stay listed in §13 as unverified).
+>
+> *History.* Round 1 returned *REWORK REQUIRED — verification-only* with a single blocking item, F-S5-G01
 > (Android dev-client feature verification). §11.1 is that evidence. The smoke pass found one real bug —
 > [F-S5-05](findings/F-S5-05-online-start-cancelled-by-its-own-rerender.md), latent since Sprint 4 — which is fixed with a
 > failing-first regression test. No database, RLS, permission or architecture change was made in round 2. Per the

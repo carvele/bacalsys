@@ -1,7 +1,8 @@
 # Sprint 5: Acceptance Checklist
 
-> **Status: ROUND 2 — F-S5-G01 EVIDENCE SUBMITTED, PENDING THE REVIEWER'S FINAL SIGN-OFF.** Nothing here is
-> self-approved and Sprint 5 is **not tagged**. Round 1 (Reviewer): implementation technically clean; one blocking,
+> **Status: ACCEPTED — CLOSED (2026-09-28).** Reviewer verdict relayed by the product owner ("Sprint 5 implementation
+> gate: ACCEPTED — CLOSED"); tag `sprint-05-accepted` → `f87d807a7486af31e3cb9939c616b90783a52e82`. The Executor did not
+> self-approve. *History:* round 1 (Reviewer): implementation technically clean; one blocking,
 > verification-only item, **F-S5-G01** (Android feature smoke) — rows 23 and 30. The smoke pass exposed one real bug,
 > **F-S5-05** (latent since Sprint 4), fixed with a failing-first test — row 31. See [STATUS.md](STATUS.md) §11.1 and
 > [findings/](findings/) (now five discoveries: 2 Bugs, 3 Backlog Refinements, 0 ADRs).
@@ -38,7 +39,7 @@ An item is checked only with the evidence beside it. Detail is in [STATUS.md](ST
 | 26 | Local-stack runs (`supabase test db`) | ⚠️ Waived | Docker unavailable; offline PGlite + hosted probes cover the same ground |
 | 27 | Hosted fixture cleanup | ⚠️ Not executed | The product owner's call, same as Sprints 2–4 |
 | 28 | F-S5-03 — offline workout vs Rule C version drift | ⚠️ Open decision (Planner) | Literal frozen contract implemented (`22000`); fallback options written up, none built |
-| 29 | Tag Sprint 5 as accepted | ⏳ **Not done** | Awaiting the Reviewer's final sign-off; the Executor does not self-approve or tag |
+| 29 | Tag Sprint 5 as accepted | ✅ | Reviewer verdict **ACCEPTED — CLOSED** relayed by the product owner; annotated tag `sprint-05-accepted` → `f87d807a7486af31e3cb9939c616b90783a52e82` (the head the Reviewer named) |
 | 30 | **F-S5-G01** — Android dev-client feature smoke: signed-in render, Today's training from the occurrence query, an assigned occurrence opening the player with its occurrence identity, ≥ 1 authorized assignment surface rendered *and* interacted with, screenshots + logcat, disposable identity | ✅ | STATUS §11.1; 11 screenshots in [evidence/](evidence/). Athlete A: Today's training ✅; Start → player ✅ (after F-S5-05 fix) — server proof: occurrence `in_progress`, exactly 1 linked session, versions equal; card flips to *In progress / Resume*. Coach A: roster ✅; `AssignWorkoutModal` rendered + interacted (routine, 2 athletes, Single/Recurring, version chips) ✅. Logcat: **0** `crash` entries; no JS error after the final reload (one transient hot-reload `ReferenceError` during my own mid-edit is documented). Fixture identities `@e2e.bacalsys.local`, no personal account. **Gaps stated in §11.1:** Rule C panel, modal submit, set-logging/finish and offline not exercised on the device |
 | 31 | **F-S5-05** — Workout Player online start cancelled by its own re-render (Bug, latent since Sprint 4) fixed with a failing-first regression test | ✅ | [finding](findings/F-S5-05-online-start-cancelled-by-its-own-rerender.md); `use-session-start.test.tsx` 5 tests — 2 failed against the verbatim-extracted bug (`sessionId` stayed `null`; error swallowed), all pass after; on-device before/after screenshots `android-03` / `android-04` |
 | 32 | Round-2 regression after the fix | ✅ | `npm run verify`: typecheck 0 errors, lint 0; Jest **15 suites / 150 tests** (was 14 / 145); Node **2 / 9**; offline pgTAP **15 files / 646, 0 failed** (unchanged — no database change); `npm run build:web` passes. CI on the round-2 commit `f87d807`: [run 36441645436](https://github.com/carvele/bacalsys/actions/runs/36441645436) **green** — tests job ✅ and Pages build & deploy ✅ (STATUS §12) |
@@ -52,6 +53,8 @@ An item is checked only with the evidence beside it. Detail is in [STATUS.md](ST
   deviation from Section 12's architecture. F-S5-03 and F-S5-04 stay backlog refinements, untouched, per the Reviewer.
 - **Operational change to flag:** applying the scheduling migration installed `pg_cron` 1.6.4 on `bacalsys-dev`
   (F-S5-02). The two frozen jobs now run on the dev database; one-off probe jobs were removed.
-- **Next workflow step:** the product owner relays the round-2 delta (this file, STATUS §11.1, F-S5-05, the evidence
-  screenshots and the commit list) to the ChatGPT Reviewer for the final sign-off. Sprint 5 stays untagged until a
-  Reviewer verdict is relayed.
+- **Closed.** Waived / unverified items the Reviewer ruled non-blocking: submitting `AssignWorkoutModal` on a device,
+  a full on-device workout, the Rule C panel on a device, Android-offline, iOS, hosted-fixture cleanup, local-stack runs.
+  F-S5-03 (Planner decision) and F-S5-04 remain backlog refinements.
+- **Next workflow step:** Sprint 6 — History, Statistics & Calisthenics Skills — is planned by the Planner
+  (Antigravity); no Sprint 6 implementation until that plan clears the Reviewer's architecture gate.
