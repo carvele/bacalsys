@@ -10,6 +10,7 @@ export default function CoachLayout() {
       }}
     >
       <Stack.Screen name="my-athletes" options={{ title: 'My athletes' }} />
+      <Stack.Screen name="skills/verify" options={{ title: 'Skill verification' }} />
     </Stack>
   );
 }

@@ -227,6 +227,55 @@ export function usePendingSkillAttempts() {
   });
 }
 
+export interface VerifiedAchievementView {
+  id: string;
+  athleteId: string;
+  athleteName: string;
+  skillName: string;
+  progressionName: string;
+  verifiedAt: string;
+}
+
+interface RawVerifiedAchievement {
+  id: string;
+  athlete_id: string;
+  verified_at: string;
+  athlete: { full_name: string } | null;
+  progression: { name: string; skill: { name: string } | null } | null;
+}
+
+/**
+ * The caller's own recent verifications (`verified_by = auth.uid()`), active
+ * only — the pool the Revoke action in the verification queue works from.
+ */
+export function useMyVerifiedAchievements(callerId: string | undefined) {
+  return useQuery({
+    queryKey: ['my-verified-achievements', callerId],
+    enabled: !!callerId,
+    queryFn: async (): Promise<VerifiedAchievementView[]> => {
+      const { data, error } = await supabase
+        .from('skill_achievements')
+        .select(
+          'id, athlete_id, verified_at, athlete:profiles!skill_achievements_athlete_id_fkey(full_name), ' +
+            'progression:skill_progressions(name, skill:skills(name))',
+        )
+        .eq('verified_by', callerId!)
+        .eq('status', 'active')
+        .order('verified_at', { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return ((data ?? []) as unknown as RawVerifiedAchievement[]).map((r) => ({
+        id: r.id,
+        athleteId: r.athlete_id,
+        athleteName: r.athlete?.full_name?.trim() || 'Unnamed member',
+        skillName: r.progression?.skill?.name ?? 'Skill',
+        progressionName: r.progression?.name ?? 'Rung',
+        verifiedAt: r.verified_at,
+      }));
+    },
+  });
+}
+
 // -- Mutations (thin RPC wrappers; the caller supplies its own idempotency key) --------------------
 
 export async function setAthleteSkillStatus(args: { athleteId: string; skillId: string; progressionId: string; idempotencyKey: string }) {
