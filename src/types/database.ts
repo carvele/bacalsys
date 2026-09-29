@@ -114,6 +114,58 @@ export type Database = {
           },
         ]
       }
+      athlete_skill_status: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          current_progression_id: string
+          id: string
+          skill_id: string
+          started_training_at: string
+          updated_at: string
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          current_progression_id: string
+          id?: string
+          skill_id: string
+          started_training_at?: string
+          updated_at?: string
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          current_progression_id?: string
+          id?: string
+          skill_id?: string
+          started_training_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "athlete_skill_status_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athlete_skill_status_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_athlete_skill_status_progression"
+            columns: ["skill_id", "current_progression_id"]
+            isOneToOne: false
+            referencedRelation: "skill_progressions"
+            referencedColumns: ["skill_id", "id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -845,6 +897,245 @@ export type Database = {
           },
         ]
       }
+      skill_achievements: {
+        Row: {
+          athlete_id: string
+          created_at: string
+          id: string
+          progression_id: string
+          revocation_reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          skill_attempt_id: string | null
+          status: string
+          updated_at: string
+          verified_at: string
+          verified_by: string
+        }
+        Insert: {
+          athlete_id: string
+          created_at?: string
+          id?: string
+          progression_id: string
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          skill_attempt_id?: string | null
+          status?: string
+          updated_at?: string
+          verified_at?: string
+          verified_by: string
+        }
+        Update: {
+          athlete_id?: string
+          created_at?: string
+          id?: string
+          progression_id?: string
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          skill_attempt_id?: string | null
+          status?: string
+          updated_at?: string
+          verified_at?: string
+          verified_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_achievements_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_achievements_progression_id_fkey"
+            columns: ["progression_id"]
+            isOneToOne: false
+            referencedRelation: "skill_progressions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_achievements_revoked_by_fkey"
+            columns: ["revoked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_achievements_skill_attempt_id_fkey"
+            columns: ["skill_attempt_id"]
+            isOneToOne: false
+            referencedRelation: "skill_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_achievements_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      skill_attempts: {
+        Row: {
+          actual_hold_seconds: number | null
+          actual_reps: number | null
+          athlete_id: string
+          attempt_date: string
+          created_at: string
+          id: string
+          progression_id: string
+          review_feedback: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          actual_hold_seconds?: number | null
+          actual_reps?: number | null
+          athlete_id: string
+          attempt_date?: string
+          created_at?: string
+          id?: string
+          progression_id: string
+          review_feedback?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          actual_hold_seconds?: number | null
+          actual_reps?: number | null
+          athlete_id?: string
+          attempt_date?: string
+          created_at?: string
+          id?: string
+          progression_id?: string
+          review_feedback?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_attempts_athlete_id_fkey"
+            columns: ["athlete_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_attempts_progression_id_fkey"
+            columns: ["progression_id"]
+            isOneToOne: false
+            referencedRelation: "skill_progressions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "skill_attempts_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      skill_progressions: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          rank_order: number
+          skill_id: string
+          target_hold_seconds: number | null
+          target_reps: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          rank_order: number
+          skill_id: string
+          target_hold_seconds?: number | null
+          target_reps?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          rank_order?: number
+          skill_id?: string
+          target_hold_seconds?: number | null
+          target_reps?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_progressions_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      skills: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          icon_name: string | null
+          id: string
+          name: string
+          organization_id: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          icon_name?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          icon_name?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skills_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_role_permissions: {
         Row: {
           created_at: string
@@ -1372,7 +1663,20 @@ export type Database = {
         }
         Returns: Json
       }
+      get_athlete_summary: {
+        Args: {
+          p_athlete_id: string
+          p_end_date?: string
+          p_start_date?: string
+        }
+        Returns: Json
+      }
       get_my_access_context: { Args: never; Returns: Json }
+      get_my_athlete_summary: {
+        Args: { p_end_date?: string; p_start_date?: string }
+        Returns: Json
+      }
+      get_session_replay: { Args: { p_session_id: string }; Returns: Json }
       list_pending_members: {
         Args: never
         Returns: {
@@ -1383,6 +1687,17 @@ export type Database = {
           home_branch_id: string
           id: string
         }[]
+      }
+      log_skill_attempt: {
+        Args: {
+          p_actual_hold_seconds: number
+          p_actual_reps: number
+          p_attempt_date: string
+          p_idempotency_key: string
+          p_progression_id: string
+          p_video_url: string
+        }
+        Returns: Json
       }
       migrate_assignment_version: {
         Args: {
@@ -1446,6 +1761,32 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      review_skill_attempt: {
+        Args: {
+          p_approved: boolean
+          p_attempt_id: string
+          p_feedback: string
+          p_idempotency_key: string
+        }
+        Returns: Json
+      }
+      revoke_skill_achievement: {
+        Args: {
+          p_achievement_id: string
+          p_idempotency_key: string
+          p_reason: string
+        }
+        Returns: Json
+      }
+      set_athlete_skill_status: {
+        Args: {
+          p_athlete_id: string
+          p_idempotency_key: string
+          p_progression_id: string
+          p_skill_id: string
+        }
+        Returns: Json
       }
       set_template_visibility: {
         Args: { p_template_id: string; p_visibility: string }
@@ -1529,6 +1870,17 @@ export type Database = {
         Args: { p_bundle: Json; p_idempotency_key: string }
         Returns: Json
       }
+      update_skill_progression: {
+        Args: {
+          p_description: string
+          p_idempotency_key: string
+          p_name: string
+          p_progression_id: string
+          p_target_hold_seconds: number
+          p_target_reps: number
+        }
+        Returns: Json
+      }
       update_workout_template_metadata: {
         Args: { p_description: string; p_name: string; p_template_id: string }
         Returns: {
@@ -1548,6 +1900,15 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      verify_skill_achievement: {
+        Args: {
+          p_athlete_id: string
+          p_idempotency_key: string
+          p_progression_id: string
+          p_skill_attempt_id?: string
+        }
+        Returns: Json
       }
     }
     Enums: {
