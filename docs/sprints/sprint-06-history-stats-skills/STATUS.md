@@ -146,4 +146,9 @@ navigation corrections against the frozen text itself, or an explicitly stated v
 - Hosted fixture cleanup: the four Sprint 6 fixtures remain on `bacalsys-dev`
   (`scripts/test/cleanup-fixtures.mjs` removes them); left for the product owner's call, same convention as
   Sprints 2–5.
-- CI status for the commits in this sprint: not yet checked at the time of writing (pending push).
+
+## 7. CI
+
+Run [36571189205](https://github.com/carvele/bacalsys/actions/runs/36571189205) on commit `0d94705` (the docs
+commit carrying STATUS/ACCEPTANCE/findings, which is also the head of everything else pushed in this batch) —
+**both jobs green**: "Typecheck, lint, unit + database tests" (1m2s) and "Build & deploy to GitHub Pages" (1m10s).

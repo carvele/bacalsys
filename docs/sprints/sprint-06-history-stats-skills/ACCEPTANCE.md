@@ -44,7 +44,7 @@ refer to `016_training_history_and_statistics.test.sql` (49 total) and `017_skil
 | 31 | Hosted Acceptance Slice 1 — session replay + Rule E redaction | ✅ | **9/9** (STATUS §4) |
 | 32 | Hosted Acceptance Slice 2 — skill progression, attempt review, criteria edit, mandatory-reason revocation | ✅ | **9/9** (STATUS §4) |
 | 33 | Hosted concurrency probes — all 5 from Section 13, run as real overlapping HTTP calls | ✅ | **9/9** (STATUS §4 table) |
-| 34 | CI green for the commits in this sprint | ⏳ Not yet checked | Pending push |
+| 34 | CI green for the commits in this sprint | ✅ | Run [36571189205](https://github.com/carvele/bacalsys/actions/runs/36571189205) on commit `0d94705` — both jobs green: tests (typecheck, lint, Jest, Node scripts, `db:verify`) and Pages build & deploy |
 | 35 | Hosted fixture cleanup | ⚠️ Not executed | Four Sprint 6 fixtures remain on `bacalsys-dev`; the product owner's call, same convention as Sprints 2–5 |
 | 36 | Tag Sprint 6 as accepted | ⏳ Not done | Requires a relayed Reviewer verdict first (workflow rule) |
 
