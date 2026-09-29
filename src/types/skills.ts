@@ -8,9 +8,9 @@ import type { Database } from '@/types/database';
  * untyped `jsonb` (session replay, summary metrics, mutation receipts) are
  * validated by the hand-written parsers below rather than a schema library:
  * the roadmap allows no new framework without an ADR, and these shapes are small
- * and fixed by the migrations (see finding F-S6-E07). A parser never throws on a
- * missing optional field; it throws only when the payload is not the expected
- * kind of object at all, so a screen fails loudly instead of rendering garbage.
+ * and fixed by the migrations. A parser never throws on a missing optional
+ * field; it throws only when the payload is not the expected kind of object at
+ * all, so a screen fails loudly instead of rendering garbage.
  */
 
 type Tables = Database['public']['Tables'];
