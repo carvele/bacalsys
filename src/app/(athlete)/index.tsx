@@ -5,6 +5,7 @@ import { TodaysTrainingCard } from '@/components/TodaysTrainingCard';
 import { Button, Card, Heading, Screen } from '@/components/ui';
 import { hasPermission } from '@/features/auth/access';
 import { useAuth } from '@/features/auth/use-auth';
+import { usePendingSkillAttempts } from '@/lib/skills';
 
 /** Task 1.13: Athlete Home, the landing screen for every approved member. */
 export default function AthleteHomeScreen() {
@@ -15,8 +16,13 @@ export default function AthleteHomeScreen() {
   const canReviewMembers = hasPermission(access, 'members:approve');
   const canAssignCoaches = hasPermission(access, 'coaches:assign');
   const canReviewExercises = hasPermission(access, 'exercises:approve');
+  const canVerifySkills = hasPermission(access, 'skills:verify');
   const isCoach = positions.includes('Coach');
-  const hasOfficerTools = canReviewMembers || canAssignCoaches || canReviewExercises;
+  const hasOfficerTools = canReviewMembers || canAssignCoaches || canReviewExercises || canVerifySkills;
+
+  // Sprint 6 · Task 6.15: pending count for the verification queue badge.
+  const pendingSkills = usePendingSkillAttempts(canVerifySkills);
+  const pendingCount = pendingSkills.data?.length ?? 0;
 
   return (
     <Screen>
@@ -53,6 +59,18 @@ export default function AthleteHomeScreen() {
           <Button label="Open routines" variant="secondary" onPress={() => router.push('/workouts')} />
         </Card>
 
+        <Card className="gap-3">
+          <Text className="text-title text-ink">Training history</Text>
+          <Text className="text-ink-muted">Review past sessions and your 30-day adherence.</Text>
+          <Button label="Open training history" variant="secondary" onPress={() => router.push('/history')} />
+        </Card>
+
+        <Card className="gap-3">
+          <Text className="text-title text-ink">Calisthenics skills</Text>
+          <Text className="text-ink-muted">Track your progress through the club&apos;s skill trees.</Text>
+          <Button label="Open skills" variant="secondary" onPress={() => router.push('/skills')} />
+        </Card>
+
         {isCoach ? (
           <Card className="gap-3">
             <Text className="text-title text-ink">Coaching</Text>
@@ -71,6 +89,18 @@ export default function AthleteHomeScreen() {
             ) : null}
             {canReviewExercises ? (
               <Button label="Review custom exercises" onPress={() => router.push('/exercise-approvals')} />
+            ) : null}
+            {canVerifySkills ? (
+              <View className="flex-row items-center gap-2">
+                <View className="flex-1">
+                  <Button label="Skill verification queue" onPress={() => router.push('/skills/verify')} />
+                </View>
+                {pendingCount > 0 ? (
+                  <View accessibilityLabel={`${pendingCount} pending`} className="min-w-6 items-center rounded-full bg-danger px-2 py-1">
+                    <Text className="text-xs font-bold text-white">{pendingCount}</Text>
+                  </View>
+                ) : null}
+              </View>
             ) : null}
           </Card>
         ) : null}

@@ -195,9 +195,10 @@ export interface PendingAttemptView extends SkillAttemptView {
  * act on (RLS/`can_verify_skill` already scopes this to assigned athletes for a
  * Coach, or the whole organization for VP/President), oldest first.
  */
-export function usePendingSkillAttempts() {
+export function usePendingSkillAttempts(enabled = true) {
   return useQuery({
     queryKey: ['pending-skill-attempts'],
+    enabled,
     queryFn: async (): Promise<PendingAttemptView[]> => {
       const { data, error } = await supabase
         .from('skill_attempts')

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, RefreshControl, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -99,9 +100,19 @@ export default function MyAthletesScreen() {
                   : 'No upcoming workouts assigned'}
               </Text>
               {item.notes ? <Text className="text-ink-muted">{item.notes}</Text> : null}
-              {canAssign && item.athlete ? (
-                <View className="mt-2">
-                  <Button label="Assign workout" variant="secondary" onPress={() => setAssigning(item.athlete!.id)} />
+              {item.athlete ? (
+                <View className="mt-2 flex-row flex-wrap gap-2">
+                  <Button
+                    label="History"
+                    variant="secondary"
+                    onPress={() => router.push({ pathname: '/history', params: { athleteId: item.athlete!.id } })}
+                  />
+                  <Button
+                    label="Skills"
+                    variant="secondary"
+                    onPress={() => router.push({ pathname: '/skills', params: { athleteId: item.athlete!.id } })}
+                  />
+                  {canAssign ? <Button label="Assign workout" variant="secondary" onPress={() => setAssigning(item.athlete!.id)} /> : null}
                 </View>
               ) : null}
             </Card>

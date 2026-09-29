@@ -55,6 +55,10 @@ function RootNavigator() {
   const isActive = route === 'active';
   const hasOfficerTools = isActive && OFFICER_PERMISSIONS.some((p) => hasPermission(access, p));
   const isCoach = isActive && (access?.positions.includes('Coach') ?? false);
+  // Sprint 6: skills:verify (Coach, Vice President, President) reaches the
+  // verification queue under (coach)/skills/verify even for a non-Coach officer.
+  const canVerifySkills = isActive && hasPermission(access, 'skills:verify');
+  const canSeeCoachGroup = isCoach || canVerifySkills;
 
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#0B0F14' } }}>
@@ -63,7 +67,7 @@ function RootNavigator() {
         <Stack.Protected guard={hasOfficerTools}>
           <Stack.Screen name="(officer)" />
         </Stack.Protected>
-        <Stack.Protected guard={isCoach}>
+        <Stack.Protected guard={canSeeCoachGroup}>
           <Stack.Screen name="(coach)" />
         </Stack.Protected>
       </Stack.Protected>
