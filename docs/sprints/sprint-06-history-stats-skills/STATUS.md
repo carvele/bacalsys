@@ -1,16 +1,17 @@
 # Sprint 6: Training History, Statistics & Calisthenics Skills — engineering status
 
-> **Status: Reviewer round 2 — Ready for Reviewer Gate (2026-10-07).**
-> Item 22 (**F-S6-P10** / blocking finding **F-S6-R01**) is **100% executed and evidenced** on a physical Android
-> device (Infinix X6880, Android 14) via USB debugging: 6 canonical UI flow screenshots + clean logcat in
+> **Status: Reviewer round 2 closure — Ready for Final Reviewer Gate (2026-10-07).**
+> Item 22 (**F-S6-P10** / blocking findings **F-S6-R01**, **F-S6-R02**) is **100% executed and evidenced** on a physical Android
+> device (Infinix X6880, Android 14) via USB debugging: 6 canonical UI flow screenshots + clean app-filtered logcat in
 > `docs/sprints/sprint-06-history-stats-skills/evidence/`. Finding **F-S6-E07** (duplicate React key on extra sets)
-> was diagnosed, fixed in `SessionReplayTable.tsx` / `replay.ts`, and regression-tested. Non-blocking composite FK
-> index item 37 is verified on hosted. Hosted smoke suites Sprints 1–6 re-run and passing 100%.
+> was diagnosed, fixed in `SessionReplayTable.tsx` / `replay.ts`, regression-tested, and re-verified on device with zero LogBox warnings.
+> Hosted migration history was reconciled to match Git 1:1 (`20260929000008` canonical, orphan `20260929140215` removed) with composite FK index intact.
+> Hosted smoke suites Sprints 1–6 re-run and passing 100%.
 > **Do not tag `sprint-06-accepted`** until the Reviewer's formal PASS verdict is relayed by the product owner.
 >
 > **Baseline:** `sprint-05-accepted` (commit `f87d807`). Roadmap v1.2 Section 13, Tasks 6.0–6.16, implemented from
-> the Planner's dispatch as frozen, with six classified discoveries (§5): five Bugs found and fixed before/during merge
-> (F-S6-E02, E03, E04, E05, E07), and the Android-evidence gap (F-S6-E06 / F-S6-R01) fully closed in round 2 (§9).
+> the Planner's dispatch as frozen, with findings (§5): Bugs found and fixed (F-S6-E02, E03, E04, E05, E07),
+> and the Android & migration verification gaps (F-S6-E06 / F-S6-R01 / F-S6-R02) fully closed (§9, §10).
 
 - **Environment:**
   - Hosted dev project `bacalsys-dev` (`sfptojkkmjggssqzyseo`), PostgreSQL **17.6**.
@@ -134,10 +135,15 @@ plainly, not silently skipped; see the finding for what would close it.
   `(coach)` route group was gated on the Coach position alone, so a Vice President/President holding
   `skills:verify` could never reach `/skills/verify`; the root navigator guard now also admits `skills:verify`.
 - [F-S6-E06](findings/F-S6-E06-android-device-smoke-not-executed.md) (Backlog Refinement) — the required interactive
-  Android smoke test was not run; the credential-entry boundary and what would close it are recorded there.
+  Android smoke test was not run initially; closed in round 2 via physical device smoke test.
+- [F-S6-E07](findings/F-S6-E07-session-replay-duplicate-key-extra-sets.md) (Bug, client-only) — React duplicate key
+  collision in `SessionReplayTable` when extra sets share set numbers; fixed via `replaySetKey` composite keying.
+- [F-S6-R02](findings/F-S6-R02-round-2-closure.md) (Backlog Refinement / Verification) — Reviewer round 2 targeted closure:
+  re-run physical Android session replay post-fix to eliminate LogBox notification, generate PID-filtered logcat and
+  crash buffer evidence, and reconcile remote-only migration `20260929140215` in hosted migration history.
 
-No ADR was needed: nothing here conflicts with the frozen architecture or roadmap; all five are either predicate/
-navigation corrections against the frozen text itself, or an explicitly stated verification gap.
+No ADR was needed: nothing here conflicts with the frozen architecture or roadmap; all findings are either predicate/
+navigation corrections against the frozen text itself, or explicitly evidenced verification closures.
 
 ## 6. Not verified (stated plainly)
 
@@ -218,4 +224,20 @@ in §9 below.
 - `npm run verify`: Typecheck 0 errors; lint 0 errors; Jest 20 suites / 203 tests passed; Node script tests 2 suites / 9 tests passed; offline pgTAP 17 files / 770 assertions passed.
 - Item 22 is marked **COMPLETE (✅)** in [ACCEPTANCE.md](ACCEPTANCE.md).
 - Item 38 remains **Pending Reviewer Gate**: `sprint-06-accepted` git tag will be applied only after the Reviewer's formal PASS verdict is relayed.
+
+## 10. Round 2 Reviewer Gate: targeted closure (F-S6-R02)
+
+The Reviewer independently verified Round 2 (CI run 37639881013 on commit `6af3c69`, F-S6-E07 code fix, regression test, hosted composite index `athlete_skill_status_skill_progression_idx`, 6 Android screenshots) and issued a targeted closure requirement:
+1. `android-02-session-replay.png` had been captured during the initial run right before the F-S6-E07 fix was applied, showing a React Native LogBox notification banner at the bottom.
+2. `android-smoke.log` contained system logs rather than strictly package/process-filtered logs for `ph.bacalsys.app`.
+3. Hosted migration history on `sfptojkkmjggssqzyseo` recorded both `20260929000008` and an orphan `20260929140215` (both named `athlete_skill_status_fk_index`).
+
+**Closures executed & verified:**
+- **Clean Android Session Replay post-fix re-run:**
+  Session replay (`bacalsys://history/ee613c48-a96f-4f1f-9af1-b23cc94497a0`) re-rendered on the physical Android device (`Infinix X6880`, `13195704AS018838`, Android 14) with the fixed bundle. Replaced `docs/sprints/sprint-06-history-stats-skills/evidence/android-02-session-replay.png`. Visually verified: **zero LogBox notifications**, clean rendered extra and skipped sets.
+- **Properly process-filtered logcat & crash buffer:**
+  Filtered logcat strictly by app PID (`12263`): `adb logcat --pid=12263 -d`. Crash buffer verified empty (`adb logcat -b crash -d` -> 0 crashes). Saved to `docs/sprints/sprint-06-history-stats-skills/evidence/android-smoke.log`.
+- **Hosted Supabase migration history reconciliation:**
+  Reconciled remote-only `20260929140215` in `supabase_migrations.schema_migrations` on hosted `sfptojkkmjggssqzyseo`. Canonical `20260929000008` is now the top migration, matching Git 1:1. Composite index `athlete_skill_status_skill_progression_idx` remains intact and valid.
+
 
