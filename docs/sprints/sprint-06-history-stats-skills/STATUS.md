@@ -158,9 +158,9 @@ navigation corrections against the frozen text itself, or explicitly evidenced v
 
 ## 7. CI
 
-Run [36571189205](https://github.com/carvele/bacalsys/actions/runs/36571189205) on commit `0d94705` (the docs
-commit carrying STATUS/ACCEPTANCE/findings, which is also the head of everything else pushed in this batch) —
-**both jobs green**: "Typecheck, lint, unit + database tests" (1m2s) and "Build & deploy to GitHub Pages" (1m10s).
+- Initial Sprint 6 run [36571189205](https://github.com/carvele/bacalsys/actions/runs/36571189205) on commit `0d94705` — **both jobs green** (tests 1m2s, deploy 1m10s).
+- Round 2 run [37639881013](https://github.com/carvele/bacalsys/actions/runs/37639881013) on commit `6af3c69` — **both jobs green** (tests 1m7s, deploy 1m15s).
+- Round 2 targeted closure run [37643200573](https://github.com/carvele/bacalsys/actions/runs/37643200573) on commit `0b671d4` — **both jobs green** (tests 1m12s, deploy 1m15s).
 
 ## 8. Round 2 — Reviewer verdict and the non-blocking performance fix
 
