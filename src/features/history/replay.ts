@@ -131,3 +131,12 @@ export function replayTotals(items: readonly ReplayItem[]) {
   }
   return { prescribed, completed, extra };
 }
+
+/**
+ * Stable React key for one paired set row. (workoutItemId, setNumber) is NOT unique: an
+ * athlete-added extra set and the prescribed set sharing its number both appear
+ * (F-S6-E07). A row always carries a prescribed id, a session-set id, or both.
+ */
+export function replaySetKey(itemId: string, s: ReplaySet): string {
+  return `${itemId}:${s.prescribedItemSetId ?? '-'}:${s.sessionSetId ?? '-'}`;
+}

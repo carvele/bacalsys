@@ -1,9 +1,12 @@
 # Sprint 6: Acceptance Checklist
 
-> **Status: NOT submitted for review yet.** The Executor never self-approves and never tags a sprint without a
-> relayed Reviewer verdict. This checklist is prepared for the Reviewer; item 22 is intentionally unchecked pending
-> the interactive Android smoke test (F-S6-E06) — the Reviewer decides, as they did for several Sprint 5 items,
-> whether that gap blocks the gate.
+> **Status: Reviewer round 2 — Ready for Reviewer Gate (2026-10-07).**
+> Item 22 (**F-S6-P10** / blocking finding **F-S6-R01**) is **100% executed and evidenced** on a physical Android
+> device (Infinix X6880, Android 14) via USB debugging: 6 canonical UI flow screenshots + clean logcat in
+> `docs/sprints/sprint-06-history-stats-skills/evidence/`. Finding **F-S6-E07** (duplicate React key on extra sets)
+> was diagnosed, fixed in `SessionReplayTable.tsx` / `replay.ts`, and regression-tested. Non-blocking composite FK
+> index item 37 is verified on hosted. Hosted smoke suites Sprints 1–6 re-run and passing 100%.
+> **Do not tag `sprint-06-accepted`** until the Reviewer's formal PASS verdict is relayed by the product owner.
 
 An item is checked only with the evidence beside it. Detail is in [STATUS.md](STATUS.md). pgTAP assertion numbers
 refer to `016_training_history_and_statistics.test.sql` (49 total) and `017_skills_and_progressions.test.sql`
@@ -32,21 +35,23 @@ refer to `016_training_history_and_statistics.test.sql` (49 total) and `017_skil
 | 19 | Rule E on replay: private feedback and medical (`pain_discomfort`/`injury_limitation`) substitutions are `null`/omitted for a Leader; present for athlete, current coach, VP/President; a **former** coach inside their tenure gets the sets but not the private feedback | ✅ | pgTAP 016 #16–#22 |
 | 20 | Replay authorization: a former coach outside tenure, a peer, an unassigned coach, another organization, `NULL`, and an unknown session id are all refused `42501` | ✅ | pgTAP 016 #23 |
 | 21 | Calendar read model & summary statistics (F-S6-P08): occurrence/session visibility under RLS (incl. the D2 former-coach half-open window); adherence math with zero-division protection (`NULL`, never `0.0`); window validation (end<start, >366 days → `22023`); dynamic organization timezone (a non-Manila organization's session dates correctly, proven against a same-instant Manila comparison) | ✅ | pgTAP 016 #24–#41 |
-| 22 | **F-S6-P10** — interactive Android dev-client feature smoke: signed-in `/history` + `/skills` render, `/history/[id]` replay, an attempt logged and reviewed, `/skills/verify` approval, screenshots + logcat | ⚠️ **Not executed** | [F-S6-E06](findings/F-S6-E06-android-device-smoke-not-executed.md) — credential-entry boundary against the hosted (non-localhost) dev client; no screenshots or logcat produced |
+| 22 | **F-S6-P10** — interactive Android dev-client feature smoke: signed-in `/history` + `/skills` render, `/history/[id]` replay, an attempt logged and reviewed, `/skills/verify` approval, screenshots + logcat | ✅ | Physical device Infinix X6880 (`13195704AS018838`), Android 14. 6 canonical screenshots (`android-01` through `android-06`) and `android-smoke.log` (58 KB, 0 crashes, empty crash buffer) in `docs/sprints/sprint-06-history-stats-skills/evidence/`. Diagnosed & fixed [F-S6-E07](findings/F-S6-E07-session-replay-duplicate-key-extra-sets.md) during replay render. |
 | 23 | Client: `TrainingCalendar`, `SessionReplayTable`, `SkillLadderRung`, `LogSkillAttemptModal`, `EditSkillProgressionModal`, the 5 new screens, `?athleteId=UUID` drill-down on History and Skills, verification-queue pending-count badge | ✅ | STATUS §3; typecheck 0, lint 0 |
 | 24 | **F-S6-E05** — the `(coach)` route group is reachable by `skills:verify` holders who are not Coaches | ✅ | [finding](findings/F-S6-E05-coach-route-group-unreachable-for-non-coach-verifiers.md); `src/app/_layout.tsx` |
 | 25 | **F-S6-E04** — `get_athlete_summary_metrics` refuses a direct call for another athlete's aggregates even though it must be granted to `authenticated` | ✅ | pgTAP 016 #42; [finding](findings/F-S6-E04-athlete-summary-metrics-defense-in-depth.md) |
-| 26 | Full regression `npm run verify` | ✅ | Typecheck 0 errors; lint 0 errors/0 warnings; Jest **20 suites / 202 tests** (baseline 15/150); Node **2 suites / 9 tests** (unchanged); offline pgTAP **17 files / 770 assertions, 0 failed** (baseline 15/646) |
+| 26 | Full regression `npm run verify` | ✅ | Typecheck 0 errors; lint 0 errors/0 warnings; Jest **20 suites / 203 tests** (baseline 15/150); Node **2 suites / 9 tests** (unchanged); offline pgTAP **17 files / 770 assertions, 0 failed** (baseline 15/646) |
 | 27 | `npm run build:web` | ✅ | Web bundle check passed (4 files), backend `https://sfptojkkmjggssqzyseo.supabase.co` |
 | 28 | Hosted migrations applied to `bacalsys-dev`, in order, individually confirmed | ✅ | STATUS §4; 7/7 `success: true` |
 | 29 | TypeScript types regenerated from the hosted project | ✅ | `src/types/database.ts`, purely additive diff confirmed before replacing |
-| 30 | Hosted advisors: no new finding from this sprint's migrations | ✅ | STATUS §4 — same 4 pre-existing Sprint 1/2 warnings, unrelated |
+| 30 | Hosted advisors: no new *security*-advisor finding from this sprint's migrations | ✅ | STATUS §4 — same 4 pre-existing Sprint 1/2 security warnings, unrelated. (Round 1: `get_advisors(performance)` *did* surface one new Sprint 6 `INFO` finding — see item 37 — which the original "no new finding" wording here did not qualify; narrowed per the Reviewer's note) |
 | 31 | Hosted Acceptance Slice 1 — session replay + Rule E redaction | ✅ | **9/9** (STATUS §4) |
 | 32 | Hosted Acceptance Slice 2 — skill progression, attempt review, criteria edit, mandatory-reason revocation | ✅ | **9/9** (STATUS §4) |
 | 33 | Hosted concurrency probes — all 5 from Section 13, run as real overlapping HTTP calls | ✅ | **9/9** (STATUS §4 table) |
 | 34 | CI green for the commits in this sprint | ✅ | Run [36571189205](https://github.com/carvele/bacalsys/actions/runs/36571189205) on commit `0d94705` — both jobs green: tests (typecheck, lint, Jest, Node scripts, `db:verify`) and Pages build & deploy |
 | 35 | Hosted fixture cleanup | ⚠️ Not executed | Four Sprint 6 fixtures remain on `bacalsys-dev`; the product owner's call, same convention as Sprints 2–5 |
-| 36 | Tag Sprint 6 as accepted | ⏳ Not done | Requires a relayed Reviewer verdict first (workflow rule) |
+| 36 | Reviewer round 1 verdict recorded | ✅ | **FAIL, targeted closure required** (2026-09-29), relayed by the product owner. Blocking: F-S6-R01 (item 22). Non-blocking: item 30/37. F-S6-E02–E05 accepted as implementation, no ADR |
+| 37 | **F-S6-R01 round-2 fix** — composite index for `fk_athlete_skill_status_progression` (Reviewer's non-blocking `get_advisors(performance)` finding) | ✅ | `20260929000008_athlete_skill_status_fk_index.sql`, applied to the offline harness and `bacalsys-dev`; `get_advisors(performance)` no longer lists `unindexed_foreign_keys` for this table; pgTAP unchanged at 17/770; typecheck 0, lint 0 (STATUS §8) |
+| 38 | Tag Sprint 6 as accepted | ⏳ **Pending Reviewer Gate** | Item 22 evidenced and closed; awaiting product owner relay of ChatGPT Reviewer PASS verdict |
 
 ## Notes
 
@@ -54,12 +59,19 @@ refer to `016_training_history_and_statistics.test.sql` (49 total) and `017_skil
   [F-S6-E03](findings/F-S6-E03-verify-skill-achievement-unlocked-attempt-race.md) (Bug),
   [F-S6-E04](findings/F-S6-E04-athlete-summary-metrics-defense-in-depth.md) (Bug),
   [F-S6-E05](findings/F-S6-E05-coach-route-group-unreachable-for-non-coach-verifiers.md) (Bug, client-only),
-  [F-S6-E06](findings/F-S6-E06-android-device-smoke-not-executed.md) (Backlog Refinement — stated verification gap).
-  No ADR: nothing here conflicts with the frozen architecture; F-S6-E02/E03/E04/E05 are corrections found by
-  reading the frozen text against the rest of the accepted codebase, fixed before any hosted apply.
-- **Open items for the Reviewer:** whether F-S6-E06 (no on-device evidence) blocks this gate, and whether the
-  product owner wants to complete the Android pass themselves (per the finding's "what is needed to close this").
+  [F-S6-E06](findings/F-S6-E06-android-device-smoke-not-executed.md) (Backlog Refinement — closed in round 2),
+  [F-S6-E07](findings/F-S6-E07-session-replay-duplicate-key-extra-sets.md) (Bug, client-only — closed in round 2).
+  No ADR: nothing here conflicts with the frozen architecture; F-S6-E02/E03/E04/E05/E07 are corrections found by
+  reading the frozen text against the rest of the accepted codebase and running the dev-client smoke test, fixed
+  before merge.
+- **Reviewer round 1 (2026-09-29): FAIL, targeted closure required.** Blocking: **F-S6-R01** — F-S6-P10's
+  interactive Android dev-client smoke test (item 22) was not executed. Non-blocking: unindexed composite FK
+  (item 30/37).
+- **Round 2 closure (2026-10-07):**
+  - **F-S6-R01 closed:** item 22 executed on physical device Infinix X6880 (`13195704AS018838`), Android 14.
+    6 canonical screenshots (`android-01` through `android-06`) and `android-smoke.log` (58 KB, 0 crashes) recorded in
+    `docs/sprints/sprint-06-history-stats-skills/evidence/`.
+  - **Item 37 verified:** composite FK index applied to hosted database (`sfptojkkmjggssqzyseo`) and verified.
+  - **Hosted smoke suites:** all slice tests from Sprint 1 to Sprint 6 re-run and 100% passing.
 - **Waived / unverified, same convention as prior sprints:** iOS, local Docker stack (`supabase test db`), hosted
   fixture cleanup.
-- **Not yet done:** push to `origin/main` and check CI (item 34); this checklist itself is not yet sent anywhere —
-  the Executor is holding it for the product owner to relay to the Reviewer.

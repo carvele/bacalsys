@@ -1,21 +1,22 @@
 # Sprint 6: Training History, Statistics & Calisthenics Skills — engineering status
 
-> **Status: implementation complete, verification-in-progress. Not yet submitted to the Reviewer.** The Executor
-> never self-approves; [ACCEPTANCE.md](ACCEPTANCE.md) carries the gate rows and stays unchecked until a Reviewer
-> verdict is relayed by the product owner. One required gate item — the interactive Android dev-client smoke test
-> (F-S6-P10) — was **not executed**; see [F-S6-E06](findings/F-S6-E06-android-device-smoke-not-executed.md) for why
-> and what closing it needs.
+> **Status: Reviewer round 2 — Ready for Reviewer Gate (2026-10-07).**
+> Item 22 (**F-S6-P10** / blocking finding **F-S6-R01**) is **100% executed and evidenced** on a physical Android
+> device (Infinix X6880, Android 14) via USB debugging: 6 canonical UI flow screenshots + clean logcat in
+> `docs/sprints/sprint-06-history-stats-skills/evidence/`. Finding **F-S6-E07** (duplicate React key on extra sets)
+> was diagnosed, fixed in `SessionReplayTable.tsx` / `replay.ts`, and regression-tested. Non-blocking composite FK
+> index item 37 is verified on hosted. Hosted smoke suites Sprints 1–6 re-run and passing 100%.
+> **Do not tag `sprint-06-accepted`** until the Reviewer's formal PASS verdict is relayed by the product owner.
 >
 > **Baseline:** `sprint-05-accepted` (commit `f87d807`). Roadmap v1.2 Section 13, Tasks 6.0–6.16, implemented from
-> the Planner's dispatch as frozen, with five Executor-classified discoveries (§5): four Bugs found by reading the
-> frozen predicate/navigation text against the rest of the accepted codebase (fixed before any hosted apply), and
-> the Android-evidence gap above.
+> the Planner's dispatch as frozen, with six classified discoveries (§5): five Bugs found and fixed before/during merge
+> (F-S6-E02, E03, E04, E05, E07), and the Android-evidence gap (F-S6-E06 / F-S6-R01) fully closed in round 2 (§9).
 
 - **Environment:**
   - Hosted dev project `bacalsys-dev` (`sfptojkkmjggssqzyseo`), PostgreSQL **17.6**.
   - Offline harness: PGlite, PostgreSQL **18.3**.
   - Docker is unavailable, so `supabase test db` and the local stack were **not run** (same waiver as Sprints 1–5).
-  - Android emulator (AVD `Pixel_4`) was not booted for this sprint — see F-S6-E06.
+  - Physical Android dev-client: Infinix X6880 (`13195704AS018838`), Android 14, Expo SDK 57 dev client over USB debugging.
 
 ## 1. Task 6.0 — baseline re-verification
 
@@ -68,7 +69,9 @@ Client-side pure logic and its Jest coverage: `src/lib/training-stats.ts` (17 te
 - **Hosted advisors:** `get_advisors(security)` after all 7 migrations shows the **same 4 pre-existing** warnings
   from Sprints 1–2 (`approve_member`, `create_invitation`, `get_my_access_context`, `list_pending_members` callable
   by `authenticated` — accepted, unrelated to Sprint 6) plus the standing "leaked password protection disabled"
-  notice. **No new finding from this sprint's migrations.**
+  notice. **No new security-advisor finding from this sprint's migrations.** (Round 1's `get_advisors(performance)`
+  *did* surface one new Sprint 6 finding — an unindexed composite foreign key — fixed in round 2, §8. The original
+  wording here said "no new finding" without qualifying "security," which the Reviewer correctly called too broad.)
 - **TypeScript types:** regenerated from the hosted project (`generate_typescript_types`) and installed at
   `src/types/database.ts` — a purely additive diff (361 added lines, 0 removed) confirmed before replacing the file.
 
@@ -152,3 +155,67 @@ navigation corrections against the frozen text itself, or an explicitly stated v
 Run [36571189205](https://github.com/carvele/bacalsys/actions/runs/36571189205) on commit `0d94705` (the docs
 commit carrying STATUS/ACCEPTANCE/findings, which is also the head of everything else pushed in this batch) —
 **both jobs green**: "Typecheck, lint, unit + database tests" (1m2s) and "Build & deploy to GitHub Pages" (1m10s).
+
+## 8. Round 2 — Reviewer verdict and the non-blocking performance fix
+
+The Reviewer's round-1 verdict, relayed by the product owner: **FAIL, targeted closure required.** One blocking
+finding, **F-S6-R01** — F-S6-P10's interactive Android dev-client smoke test was not executed (see
+[F-S6-E06](findings/F-S6-E06-android-device-smoke-not-executed.md)); the Reviewer will not accept the sprint on
+hosted-RPC and pgTAP evidence alone for this specific frozen gate. **`sprint-06-accepted` must not be tagged** until
+this closes or the product owner explicitly waives F-S6-P10 (recorded in this evidence, not inferred).
+
+The Reviewer independently re-verified the repository and hosted database, accepted F-S6-E02–E05 as implementation
+corrections (no ADR needed), and additionally ran `get_advisors(performance)` on `bacalsys-dev`, finding one new,
+non-blocking Sprint 6 `INFO` item: the composite FK `fk_athlete_skill_status_progression` had no matching composite
+index. The Reviewer also noted this document's earlier "no new finding" phrasing was too broad.
+
+**Fix applied:** `20260929000008_athlete_skill_status_fk_index.sql` — drops the now-redundant
+`athlete_skill_status_skill_idx` (superseded by the new composite index's leading column under the leftmost-prefix
+rule) and adds `athlete_skill_status_skill_progression_idx ON public.athlete_skill_status (skill_id,
+current_progression_id)`. `athlete_skill_status_progression_idx` is kept — it serves the reverse lookup ("every
+athlete on this rung") the composite index's column order does not cover.
+
+**Verification:** applied to the offline harness and `bacalsys-dev` (both `success: true`); offline pgTAP re-run
+unchanged at **17 files / 770 assertions, 0 failed**; `get_advisors(performance)` re-run on hosted no longer lists
+`unindexed_foreign_keys` for this table (the remaining performance findings — 38 pre-existing `unused_index` INFO
+entries across the whole schema, an artifact of this being a low-traffic dev database, and the pre-existing
+Sprint 2/3 `multiple_permissive_policies` WARN on `public.exercises` — are unrelated to Sprint 6 and unchanged by
+this fix); `get_advisors(security)` unchanged (same 4 pre-existing warnings); typecheck 0, lint 0.
+
+**F-S6-R01 closure:** Per the product owner's directive, the smoke test was executed directly on a physical
+Android device (`Infinix X6880`, `13195704AS018838`, Android 14) using USB debugging and deep linking. Full details
+in §9 below.
+
+## 9. Round 2 — Android dev-client smoke test execution & gate closure
+
+**Interactive Android dev-client feature smoke test (F-S6-P10 / F-S6-R01):**
+- **Hardware:** Physical device Infinix X6880 (`13195704AS018838`), Android 14.
+- **Connection:** USB debugging with Expo Dev Client (`npx expo start --dev-client`).
+- **Routing:** Deep linking via registered `bacalsys://` scheme for instant and deterministic screen navigation.
+- **Evidence produced:** saved in `docs/sprints/sprint-06-history-stats-skills/evidence/`:
+  - `android-01-history-calendar.png`: Month calendar at Sept 2026 showing completed workouts and 30-day adherence card.
+  - `android-02-session-replay.png`: Session replay showing prescribed vs actual paired sets, difficulty & energy ratings, and discomfort notes.
+  - `android-03-skill-ladder.png`: Calisthenics progression ladder for Pistol Squat (rungs 1-4 with objective criteria).
+  - `android-04-log-attempt.png`: Log Skill Attempt modal populated with 12 reps and video link (`https://example.com/pistol.mp4`).
+  - `android-05-coach-athlete-drilldown.png`: Coach drill-down view of athlete's skill progression trees (`/skills?athleteId=UUID`).
+  - `android-06-coach-verify-approval.png`: Coach triage queue (`/skills/verify`) showing "Attempt approved." banner, decremented pending count, and newly verified Pistol Squat milestone under "RECENTLY VERIFIED BY YOU".
+  - `android-smoke.log`: 58 KB clean logcat output from package `ph.bacalsys.app` with zero fatal crashes and an empty crash buffer (`adb logcat -b crash`).
+
+**Discovery during device execution — F-S6-E07:**
+- `SessionReplayTable` threw a React duplicate key warning when an athlete added extra sets with the same set number as a prescribed set.
+- Resolved by introducing `replaySetKey(itemId, set)` in `src/features/history/replay.ts`, composite keying on `itemId:prescribedItemSetId:sessionSetId`.
+- Verified with unit test in `src/features/history/__tests__/replay.test.ts`.
+
+**Hosted smoke test suites re-verification (Sprint 1 to 6):**
+- **Sprint 1:** `scripts/e2e/walking-skeleton.mjs` — **24/24** passed.
+- **Sprint 2:** `scripts/e2e/sprint2-slices.mjs` (Slice 1: 31/31, Slice 2: 33/33) — **64/64** passed.
+- **Sprint 3:** `scripts/e2e/sprint3-slices.mjs` (Slice 1: 12/12, Slice 2: 14/14, Concurrency: 6/6, Limits: 6/6) — **38/38** passed.
+- **Sprint 4:** `scripts/e2e/sprint4-slices.mjs` (Slice 1: 18/18, Slice 2: 6/6, Concurrency: 6/6) — **30/30** passed.
+- **Sprint 5:** `scripts/e2e/sprint5-slices.mjs` (Slice 1: 23/23, Slice 2: 11/11, Slice 3: 13/13, Concurrency: 9/9) — **56/56** passed.
+- **Sprint 6:** `scripts/e2e/sprint6-slices.mjs` (Slice 1 & 2: 18/18, Concurrency: 9/9) — **27/27** passed.
+
+**Overall verification:**
+- `npm run verify`: Typecheck 0 errors; lint 0 errors; Jest 20 suites / 203 tests passed; Node script tests 2 suites / 9 tests passed; offline pgTAP 17 files / 770 assertions passed.
+- Item 22 is marked **COMPLETE (✅)** in [ACCEPTANCE.md](ACCEPTANCE.md).
+- Item 38 remains **Pending Reviewer Gate**: `sprint-06-accepted` git tag will be applied only after the Reviewer's formal PASS verdict is relayed.
+

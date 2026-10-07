@@ -5,6 +5,7 @@ import {
   formatTarget,
   isMedicalReason,
   replayTotals,
+  replaySetKey,
   sessionOutcome,
   setBadge,
   substitutionFor,
@@ -152,5 +153,14 @@ describe('replayTotals', () => {
   });
   it('is all zero for no items', () => {
     expect(replayTotals([])).toEqual({ prescribed: 0, completed: 0, extra: 0 });
+  });
+});
+
+// F-S6-E07: an extra set and the prescribed set sharing its set number must not collide.
+describe('replaySetKey', () => {
+  it('is unique for an extra set and the prescribed set with the same number', () => {
+    const prescribed = set({ setNumber: 1, prescribedItemSetId: 'wis-1', sessionSetId: null });
+    const extra = set({ setNumber: 1, prescribedItemSetId: null, sessionSetId: 'ss-9' });
+    expect(replaySetKey('item-1', prescribed)).not.toBe(replaySetKey('item-1', extra));
   });
 });

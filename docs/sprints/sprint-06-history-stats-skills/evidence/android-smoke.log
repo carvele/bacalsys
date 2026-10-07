@@ -1,0 +1,506 @@
+--------- beginning of main
+10-07 22:17:58.752   660   660 D TlcKM   : TEE_Abort exiting with -28
+--------- beginning of system
+10-07 22:17:58.771   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:235 - create_operation start
+10-07 22:17:58.771   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:237 - caller_pid=21732
+10-07 22:17:58.771   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:238 - caller_uid=10259
+10-07 22:17:58.771   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:239 - forced=false
+10-07 22:17:58.771   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:240 - key.domain=r#KEY_ID
+10-07 22:17:58.771   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:241 - key.alias=None
+10-07 22:17:58.771   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:277 - with_try_import start
+10-07 22:17:58.772   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:299 - with_try_import end
+10-07 22:17:58.773   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:333 - authorize_create start
+10-07 22:17:58.773   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:344 - authorize_create end
+10-07 22:17:58.773   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:345 - unwrap_key_if_required start
+10-07 22:17:58.773   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:353 - unwrap_key_if_required end
+10-07 22:17:58.773   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:354 - upgrade_keyblob_if_required_with start
+10-07 22:17:58.773   660   660 D TlcKM   : TEE_Begin 5.0
+10-07 22:17:58.773   660   660 D TlcKM   : purpose = 0x00000001
+10-07 22:17:58.778   660   660 D TlcKM   : find_spare_operation_slot: allocate op 0x3d7cfc2a608eb141 to slot #0 (1 ops live)
+10-07 22:17:58.781   660   660 D TlcKM   : TEE_Begin exiting with 0
+10-07 22:17:58.782   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:395 - upgrade_keyblob_if_required_with end
+10-07 22:17:58.782   659  9204 I keystore2: system/security/keystore2/src/enforcements.rs:249 - finalize_create_authorization self.state=NoAuthRequired
+10-07 22:17:58.782   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:401 - operation_db.create_operation start
+10-07 22:17:58.782   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:419 - operation_db.create_operation end
+10-07 22:17:58.785   660   660 D TlcKM   : TEE_Update
+10-07 22:17:58.786   660   660 D TlcKM   : split_update_chunks
+10-07 22:17:58.791   660   660 D TlcKM   : TEE_Update exiting with 0
+10-07 22:17:58.794   660   660 D TlcKM   : TEE_Finish
+10-07 22:17:58.794   660   660 D TlcKM   : split_update_chunks
+10-07 22:17:58.796   660   660 D TlcKM   : release_operation_slot: release op slot #0 (handle 0x3d7cfc2a608eb141; 0 ops live)
+10-07 22:17:58.796   660   660 D TlcKM   : TEE_Finish exiting with 0
+10-07 22:17:58.797   660   660 D TlcKM   : TEE_Abort
+10-07 22:17:58.797   660   660 E TlcKM   : lookup_operation: op 0x3d7cfc2a608eb141 not found
+10-07 22:17:58.797   660   660 E TlcKM   : lookup_operation(session, operation_handle, &op) == -28
+10-07 22:17:58.797   660   660 D TlcKM   : TEE_Abort exiting with -28
+10-07 22:17:58.797  1310  1474 D ULogGuard: Monitoring: 16 threads, 0 requests, 0 time-bombs; 1 guards. ResetFlags = 0x7
+10-07 22:17:58.821   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:235 - create_operation start
+10-07 22:17:58.821   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:237 - caller_pid=21732
+10-07 22:17:58.821   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:238 - caller_uid=10259
+10-07 22:17:58.821   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:239 - forced=false
+10-07 22:17:58.821   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:240 - key.domain=r#KEY_ID
+10-07 22:17:58.821   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:241 - key.alias=None
+10-07 22:17:58.821   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:277 - with_try_import start
+10-07 22:17:58.822   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:299 - with_try_import end
+10-07 22:17:58.822   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:333 - authorize_create start
+10-07 22:17:58.822   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:344 - authorize_create end
+10-07 22:17:58.822   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:345 - unwrap_key_if_required start
+10-07 22:17:58.822   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:353 - unwrap_key_if_required end
+10-07 22:17:58.822   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:354 - upgrade_keyblob_if_required_with start
+10-07 22:17:58.822   660   660 D TlcKM   : TEE_Begin 5.0
+10-07 22:17:58.822   660   660 D TlcKM   : purpose = 0x00000001
+10-07 22:17:58.824   660   660 D TlcKM   : find_spare_operation_slot: allocate op 0xd225c8b388aa766 to slot #0 (1 ops live)
+10-07 22:17:58.827   660   660 D TlcKM   : TEE_Begin exiting with 0
+10-07 22:17:58.828   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:395 - upgrade_keyblob_if_required_with end
+10-07 22:17:58.828   659  9204 I keystore2: system/security/keystore2/src/enforcements.rs:249 - finalize_create_authorization self.state=NoAuthRequired
+10-07 22:17:58.828   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:401 - operation_db.create_operation start
+10-07 22:17:58.828   659  9204 I keystore2: system/security/keystore2/src/security_level.rs:419 - operation_db.create_operation end
+10-07 22:17:58.831   660   660 D TlcKM   : TEE_Update
+10-07 22:17:58.831   660   660 D TlcKM   : split_update_chunks
+10-07 22:17:58.834   660   660 D TlcKM   : TEE_Update exiting with 0
+10-07 22:17:58.836   660   660 D TlcKM   : TEE_Finish
+10-07 22:17:58.837   660   660 D TlcKM   : split_update_chunks
+10-07 22:17:58.839   660   660 D TlcKM   : release_operation_slot: release op slot #0 (handle 0xd225c8b388aa766; 0 ops live)
+10-07 22:17:58.840   660   660 D TlcKM   : TEE_Finish exiting with 0
+10-07 22:17:58.841   660   660 D TlcKM   : TEE_Abort
+10-07 22:17:58.841   660   660 E TlcKM   : lookup_operation: op 0xd225c8b388aa766 not found
+10-07 22:17:58.841   660   660 E TlcKM   : lookup_operation(session, operation_handle, &op) == -28
+10-07 22:17:58.841   660   660 D TlcKM   : TEE_Abort exiting with -28
+10-07 22:17:58.858   999  1095 D SurfaceFlinger: [SF client] REMOVE (0xb400007717585a60) for (21732:ph.bacalsys.app)
+10-07 22:17:58.928  1773  1801 E ApplicationHelper: Fail to get PackageManager
+10-07 22:17:58.936  1773  1801 E ApplicationHelper: Fail to get PackageManager
+10-07 22:17:58.963 30329 30396 I bt_shim_scanner: [le_scanning_manager.cc(851)] handle_remote_properties: handle_remote_properties  device_type= 3
+10-07 22:17:59.141  2542  2542 D TranSignalStrengthComponentImpl: [LTE] dbm: -115
+10-07 22:17:59.141  2542  2542 D TranSignalStrengthComponentImpl: [LTE] dbm: -115
+10-07 22:17:59.146  2542  3509 I TranTele/TranPhoneInterfaceManager: TTC - onSignalStrengthsChanged
+10-07 22:17:59.147  1773  1843 D TranSignalStrengthComponentImpl: [LTE] dbm: -115
+10-07 22:17:59.147  7280  7388 D TranSignalStrengthComponentImpl: [LTE] dbm: -115
+10-07 22:17:59.238 30329 30396 I bt_shim_scanner: [le_scanning_manager.cc(851)] handle_remote_properties: handle_remote_properties  device_type= 3
+10-07 22:17:59.267  1773  2284 I tranpm/NormalReclaimer: memAvailable : 1429604
+10-07 22:17:59.268  1773  2284 I tranpm/NormalReclaimer: doReclaim gap: 515996
+10-07 22:17:59.269  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.269  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.271  1773  2284 I tranpm/AppPurner:  kill info -- AppPruner: Reclaimed 0KB while requirement is 515996KB effective:false
+10-07 22:17:59.271  1773  2284 I tranpm/NormalReclaimer: prunerReclaimSizeKb=0
+10-07 22:17:59.272  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.289  1773  2284 I tranpm/CommonReclaim-recentReclaim: Final candidate bg apps size 0 while expect size 12,isCritical:false
+10-07 22:17:59.291  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.294  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.294  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.296  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.297  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.298  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.299  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.300  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.302  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.303  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.304  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.306  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.307  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.308  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.309  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.310  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.311  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.312  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.313  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.315  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.315  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.317  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.317  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.319  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.319  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.321  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.321  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.323  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.323  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.325  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.325  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.327  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.327  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.328  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.329  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.330  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.330  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.332  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.333  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.334  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.335  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.337  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.338  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.339  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=10
+10-07 22:17:59.340  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.342  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.343  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.344  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.346  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.346  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.347  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.348  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.349  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.350  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.351  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.352  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.353  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.354  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.355  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.356  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.357  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.358  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.359  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.360  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.361  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.362  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.363  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=10
+10-07 22:17:59.364  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.366  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.366  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.368  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.369  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=10
+10-07 22:17:59.370  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.371  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=10
+10-07 22:17:59.371  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.372  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=10
+10-07 22:17:59.373  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.374  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=10
+10-07 22:17:59.375  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.376  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.376  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.378  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=10
+10-07 22:17:59.378  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.379  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.381  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.381  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.383  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:17:59.384  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:17:59.385  1773  2284 I tranpm/CommonReclaim-ProcessReclaimer: kill info -- processReclaim:  request: 515996 releaseSize: 0 killTaskCount: 0 exemptCount： 45 effective: false
+10-07 22:17:59.646  1773  2078 I TranWifiSmartAssistantController: start current network monitor 
+10-07 22:17:59.646  1773  2078 I TranWifiSmartAssistantController: userIgnored :false isScoredCurrentNetwork :true
+10-07 22:17:59.646  1773  2078 I TranWifiSmartAssistantController: mCurrentNetwork :175 SSID :"PLDTHOMEFIBRuE2XA"
+10-07 22:17:59.651  1773  2078 I WifiNetworkQuality: current rssi is sufficient
+10-07 22:17:59.651  1773  2078 I TranWifiSmartAssistantController: mNoCandidateCount : 17
+10-07 22:17:59.651  1773  2078 I TranWifiSmartAssistantController: ====>>rssi :-68
+10-07 22:17:59.942  1773  1801 E ApplicationHelper: Fail to get PackageManager
+10-07 22:17:59.949  1773  1801 E ApplicationHelper: Fail to get PackageManager
+10-07 22:18:00.002  1773  2023 I AlarmManager: going to acquire wakelock now
+10-07 22:18:00.008  5762  5909 I Kolun_AI: StepCount:onTimeTick()
+10-07 22:18:00.009  4116  4320 I Kolun_AI: StepCount:onTimeTick()
+10-07 22:18:00.013  6734  6734 I UxDetectorRestHandler: loadDatabaseAtTime: 831
+10-07 22:18:00.013  6734  6734 I AiCommunicateHandler: loadDatabaseAtTime: 831
+10-07 22:18:00.015  3737  3737 I UxDetectorRestHandler: loadDatabaseAtTime: 9
+10-07 22:18:00.015  3737  3737 I AiCommunicateHandler: loadDatabaseAtTime: 9
+10-07 22:18:00.016  2329  2389 W BroadcastDispatcherLog: [27723] Broadcast received for user 0: Intent { act=android.intent.action.TIME_TICK flg=0x50200010 }
+10-07 22:18:00.017  2329  2329 V KeyguardStatusViewController: onTimeChanged
+10-07 22:18:00.017  2329  2389 W BroadcastDispatcherLog: [27724] Broadcast received for user -1: Intent { act=android.intent.action.TIME_TICK flg=0x50200010 }
+10-07 22:18:00.026  2329  2329 D TrClockView: updateDataOnTimeChanged
+10-07 22:18:00.060   999   999 I BufferQueueProducer: [StatusBar#108](this:0xb4000075b7753ef8,id:-1,api:0,p:-1,c:999) queueBuffer: fps=0.05 dur=20576.25 max=20576.25 min=20576.25
+10-07 22:18:00.064   949   965 I mtkpower@impl: [setMode] type:6, enabled:1
+10-07 22:18:00.064   949   965 E mtkpower@impl: [setMode] unknown type
+10-07 22:18:00.069   999   999 I BufferQueueProducer: [FramebufferSurface](this:0xb4000076d7557d00,id:-1,api:1,p:999,c:999) queueBuffer: fps=0.05 dur=20568.06 max=20568.06 min=20568.06
+10-07 22:18:00.070   926   926 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:0.048620,dur:20567.73,max:20567.73,min:20567.73  
+10-07 22:18:00.138   949   965 I mtkpower@impl: [setMode] type:6, enabled:0
+10-07 22:18:00.138   949   965 E mtkpower@impl: [setMode] unknown type
+10-07 22:18:00.529  1773  2926 I Hiber/hiber: begin socketDestroy, mUid: 10123
+10-07 22:18:00.539  1773  2926 D TranNetworkManagementServiceMultiLinkImpl: linkTurb destorySocketByUid  uid :10123
+10-07 22:18:00.539  1773  2926 I Hiber/hiber: clearDnsCache again!!!
+10-07 22:18:00.613  1773  2076 D TranWifiTputMonitor: WIFI: TX: 0 RX: 0 TOTAL = 0
+10-07 22:18:00.614  1773  2076 D TranWifiTputMonitor: High Tput: false, TOTAL TPUT: 0
+10-07 22:18:00.955  1773  1801 E ApplicationHelper: Fail to get PackageManager
+10-07 22:18:00.962  1773  1801 E ApplicationHelper: Fail to get PackageManager
+10-07 22:18:01.005  1773  1773 I AlarmManager: going to release wakelock now
+10-07 22:18:01.059   949   981 I libPerfCtl: xgfGetFPS pid:2329 fps:-1
+10-07 22:18:01.059   949   981 I AppThermalMode: [perfNotifyThermalState] hdl:0
+10-07 22:18:01.060   949   981 I AppThermalMode: [findAppThermalIdx] Fail: appThermalModeEnable: 0,currentFPS: -1,fg->pid:1773
+10-07 22:18:01.060   949   981 I AppThermalMode: [perfNotifyThermalState] appThermalIdx -1:
+10-07 22:18:01.127  1773  3030 D TLinkBrush_DATA: [NetdEvent]onTcpSocketStatsEvent
+10-07 22:18:01.128  1773  3030 D TLinkBrush_DATA: [NetdEvent]onTcpSocketStatsEvent sent = 0, return
+10-07 22:18:01.129  1773  3030 D TLinkBrush_DATA: [NetdEvent]onTcpSocketStatsEvent
+10-07 22:18:01.179  1773  1954 I TranHBMManagerService: processValuesLocked normal temperature=335,Threshold=410
+10-07 22:18:01.180  1773  1954 I TranHBMComponentImpl: updateBatteryLevel:24
+10-07 22:18:01.180  1773  1954 D TranHBMManagerService: allowBatteryState = true, mAllowBatteryState = true
+10-07 22:18:01.180  1773  1954 D BatteryService: HealthInfoUpdate: HealthInfo:{.chargerAcOnline = false, .chargerUsbOnline = true, .chargerWirelessOnline = false, .maxChargingCurrent = 500000, .maxChargingVoltage = 5000000, .batteryStatus = 2, .batteryHealth = 2, .batteryPresent = true, .batteryLevel = 24, .batteryVoltage = 3827, .batteryTemperature = 335, .batteryCurrent = 344000, .batteryCycleCount = 1, .batteryFullCharge = 5000000, .batteryChargeCounter=1200000, .batteryTechnology = Li-ion, .batteryCapacityLevel = 3}
+10-07 22:18:01.188  2329  2329 I ChargeAnima: TrSysChargeUtils-updateNativeCharge pumpstat Not fast charge}
+10-07 22:18:01.188  2329  3177 D ExpressionController: #mgz# onReceive
+10-07 22:18:01.188  2329  2423 D PowerUI : can't show warning due to - plugged: true status unknown: false
+10-07 22:18:01.201  2542  3510 I TranTele/TranPhoneInterfaceManager: [onReceive] action: android.intent.action.BATTERY_CHANGED
+10-07 22:18:01.204  4778  4778 W BatteryLabPowerSaveUtils: isPowerSaveOpen: false
+10-07 22:18:01.204  4778  4778 D BatteryLabService: current level == 24, temperature == 335
+10-07 22:18:01.204  4778  4778 D BatteryLabService: funcNamepumpstat
+10-07 22:18:01.205  4778  4778 D BLab-SettingsProviderUtils: isUserSetupCompleteSdk = 1
+10-07 22:18:01.205  4778  4778 D BatteryLabService: system is charging
+10-07 22:18:01.205  4778  4778 D BLab-PowerSaveProviderUtils: isPowerSaveModeReminderOn: 0
+10-07 22:18:01.206  2542  3509 D EmergencyMsgController: powerPluggedIn: true level: 24 LowBatteryMode: false
+10-07 22:18:01.218   999   999 I BufferQueueProducer: [StatusBar#108](this:0xb4000075b7753ef8,id:-1,api:0,p:-1,c:999) queueBuffer: fps=0.86 dur=1157.87 max=1157.87 min=1157.87
+10-07 22:18:01.230   949   965 I mtkpower@impl: [setMode] type:6, enabled:1
+10-07 22:18:01.230   949   965 E mtkpower@impl: [setMode] unknown type
+10-07 22:18:01.233   999   999 I BufferQueueProducer: [FramebufferSurface](this:0xb4000076d7557d00,id:-1,api:1,p:999,c:999) queueBuffer: fps=0.86 dur=1163.92 max=1163.92 min=1163.92
+10-07 22:18:01.234   926   926 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:0.858912,dur:1164.26,max:1164.26,min:1164.26  
+10-07 22:18:01.270  1773  2284 I tranpm/NormalReclaimer: memAvailable : 1426164
+10-07 22:18:01.270  2542  3509 D TLinkBrush_RAT: [handleMessage] : URC_OBSERVER
+10-07 22:18:01.271  2542  3509 D TLinkBrush_RAT: AT RESPONSE
+10-07 22:18:01.271  2542  3509 D TLinkBrush_RAT: Response str = +EDMFAPP: 21001,7,0,"515","03",1775,408,0,0,"891c00"
+10-07 22:18:01.271  2542  3509 D TLinkBrush_RAT: processUnsolOemMsg --- resp : +EDMFAPP: 21001,7,0,"515","03",1775,408,0,0,"891c00"
+10-07 22:18:01.271  1773  2284 I tranpm/NormalReclaimer: doReclaim gap: 519436
+10-07 22:18:01.272  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:01.272  2542  3509 D TLinkBrush_RAT: [handleMessage] : URC_OBSERVER
+10-07 22:18:01.272  2542  3509 D TLinkBrush_RAT: AT RESPONSE
+10-07 22:18:01.272  2542  3509 D TLinkBrush_RAT: Response str = +EDMFAPP: 21001,7,0,"515","03",1775,408,1,2,"48545407717b1d4d7cf818208081844dac00"
+10-07 22:18:01.272  2542  3509 D TLinkBrush_RAT: processUnsolOemMsg --- resp : +EDMFAPP: 21001,7,0,"515","03",1775,408,1,2,"48545407717b1d4d7cf818208081844dac00"
+10-07 22:18:01.272  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:01.274  1773  2284 I tranpm/AppPurner:  kill info -- AppPruner: Reclaimed 0KB while requirement is 519436KB effective:false
+10-07 22:18:01.275  1773  2284 I tranpm/NormalReclaimer: prunerReclaimSizeKb=0
+10-07 22:18:01.291   949   965 I mtkpower@impl: [setMode] type:6, enabled:0
+10-07 22:18:01.291   949   965 E mtkpower@impl: [setMode] unknown type
+10-07 22:18:01.331  2542  3115 D TLinkBrush_DATA: [TranSST0] rsrp +EGREG:1,717B,01D4D7CF,4096,00,0,0,0,0
+10-07 22:18:01.331  2542  3509 D TLinkBrush_RAT: [handleMessage] : URC_OBSERVER
+10-07 22:18:01.331  2542  3509 D TLinkBrush_RAT: AT RESPONSE
+10-07 22:18:01.331  2542  3509 D TLinkBrush_RAT: Response str = +EGREG: 1,"717B","01D4D7CF",4096,"00",0,0,0,0
+10-07 22:18:01.331  2542  3509 D TLinkBrush_RAT: processUnsolOemMsg --- resp : +EGREG: 1,"717B","01D4D7CF",4096,"00",0,0,0,0
+10-07 22:18:01.406  2542  3509 D TranTeleDataStoreController: [cellInfoListUrcUpdate] test!
+10-07 22:18:01.408  2542  3509 D TranTeleDataStoreController: cell info list:[CellInfoLte:{mRegistered=YES mTimeStamp=179343932553694ns mCellConnectionStatus=1 CellIdentityLte:{ mCi=30725996 mPci=151 mTac=29051 mEarfcn=1350 mBands=[3] mBandwidth=2147483647 mMcc=515 mMnc=03 mAlphaLong=SMART mAlphaShort=SMART mAdditionalPlmns={} mCsgInfo=null} CellSignalStrengthLte: rssi=-101 rsrp=-116 rsrq=-16 rssnr=0 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=0 parametersUseForLevel=1 android.telephony.CellConfigLte :{ isEndcAvailable = false }}, CellInfoLte:{mRegistered=NO mTimeStamp=179343932553694ns mCellConnectionStatus=0 CellIdentityLte:{ mCi=268435455 mPci=408 mTac=65535 mEarfcn=9485 mBands=[3] mBandwidth=2147483647 mMcc=null mMnc=null mAlphaLong= mAlphaShort= mAdditionalPlmns={} mCsgInfo=null} CellSignalStrengthLte: rssi=-85 rsrp=-100 rsrq=-15 rssnr=0 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=2 parametersUseForLevel=1 android.telephony.CellConfigLte :{ isEndcAvailable = false }}, CellInfoLte:{mRegistered=NO mTimeStamp=179343932553694ns mCellConnectionStatus=0 CellIdentityLte:{ mCi=268435455 mPci=151 mTac=65535 mEarfcn=9485 mBands=[3] mBandwidth=2147483647 mMcc=null mMnc=null mAlphaLong= mAlphaShort= mAdditionalPlmns={} mCsgInfo=null} CellSignalStrengthLte: rssi=-85 rsrp=-103 rsrq=-17 rssnr=0 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=2 parametersUseForLevel=1 android.telephony.CellConfigLte :{ isEndcAvailable = false }}, CellInfoLte:{mRegistered=NO mTimeStamp=179343932553694ns mCellConnectionStatus=0 CellIdentityLte:{ mCi=268435455 mPci=408 mTac=65535 mEarfcn=1775 mBands=[3] mBandwidth=2147483647 mMcc=null mMnc=null mAlphaLong= mAlphaShort= mAdditionalPlmns={} mCsgInfo=null} CellSignalStrengthLte: rssi=-95 rsrp=-108 rsrq=-14 rssnr=0 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=1 parametersUseForLevel=1 android.telephony.CellConfigLte :{ isEndcAvailable = false }}, CellInfoLte:{mRegistered=NO mTimeStamp=179343932553694ns mCellConnectionStatus=0 CellIdentityLte:{ mCi=268435455 mPci=408 mTac=65535 mEarfcn=1350 mBands=[3] mBandwidth=2147483647 mMcc=null mMnc=null mAlphaLong= mAlphaShort= mAdditionalPlmns={} mCsgInfo=null} CellSignalStrengthLte: rssi=-101 rsrp=-113 rsrq=-12 rssnr=0 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=1 parametersUseForLevel=1 android.telephony.CellConfigLte :{ isEndcAvailable = false }}, CellInfoLte:{mRegistered=NO mTimeStamp=179343932553694ns mCellConnectionStatus=0 CellIdentityLte:{ mCi=268435455 mPci=151 mTac=65535 mEarfcn=1775 mBands=[3] mBandwidth=2147483647 mMcc=null mMnc=null mAlphaLong= mAlphaShort= mAdditionalPlmns={} mCsgInfo=null} CellSignalStrengthLte: rssi=-95 rsrp=-114 rsrq=-19 rssnr=0 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=1 parametersUseForLevel=1 android.telephony.CellConfigLte :{ isEndcAvailable = false }}, CellInfoLte:{mRegistered=NO mTimeStamp=179343932553694ns mCellConnectionStatus=0 CellIdentityLte:{ mCi=268435455 mPci=151 mTac=65535 mEarfcn=125 mBands=[3] mBandwidth=2147483647 mMcc=null mMnc=null mAlphaLong= mAlphaShort= mAdditionalPlmns={} mCsgInfo=null} CellSignalStrengthLte: rssi=-101 rsrp=-115 rsrq=-13 rssnr=0 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=1 parametersUseForLevel=1 android.telephony.CellConfigLte :{ isEndcAvailable = false }}, CellInfoLte:{mRegistered=NO mTimeStamp=179343932553694ns mCellConnectionStatus=0 CellIdentityLte:{ mCi=268435455 mPci=408 mTac=65535 mEarfcn=38927 mBands=[3] mBandwidth=2147483647 mMcc=null mMnc=null mAlphaLong= mAlphaShort= mAdditionalPlmns={} mCsgInfo=null} CellSignalStrengthLte: rssi=-103 rsrp=-115 rsrq=-13 rssnr=0 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=1 parametersUseForLevel=1 android.telephony.CellConfigLte :{ isEndcAvailable = false }}, CellInfoLte:{mRegistered=NO mTimeStamp=179343932553694ns mCellConnectionStatus=0 CellIdentityLte:{ mCi=268435455 mPci=408 mTac=65535 mEarfcn=125 mBands=[3] mBandwidth=2147483647 mMcc=null mMnc=null mAlphaLong= mAlphaShort= mAdditionalPlmns={} mCsgInfo=null} CellSignalStrengt
+10-07 22:18:01.412  2542  3509 I TranTele/TranPhoneInterfaceManager: TTC - onCellInfoChanged
+10-07 22:18:01.430  2542  3509 D TranTeleDataStoreController: [cellInfoListUrcUpdate] test!
+10-07 22:18:01.432  2542  3509 D TranTeleDataStoreController: cell info list:[CellInfoLte:{mRegistered=YES mTimeStamp=179343955297078ns mCellConnectionStatus=1 CellIdentityLte:{ mCi=30725996 mPci=151 mTac=29051 mEarfcn=1350 mBands=[3] mBandwidth=2147483647 mMcc=515 mMnc=03 mAlphaLong=SMART mAlphaShort=SMART mAdditionalPlmns={} mCsgInfo=null} CellSignalStrengthLte: rssi=-101 rsrp=-116 rsrq=-16 rssnr=0 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=0 parametersUseForLevel=1 android.telephony.CellConfigLte :{ isEndcAvailable = false }}, CellInfoLte:{mRegistered=NO mTimeStamp=179343955297078ns mCellConnectionStatus=0 CellIdentityLte:{ mCi=268435455 mPci=408 mTac=65535 mEarfcn=9485 mBands=[3] mBandwidth=2147483647 mMcc=null mMnc=null mAlphaLong= mAlphaShort= mAdditionalPlmns={} mCsgInfo=null} CellSignalStrengthLte: rssi=-85 rsrp=-100 rsrq=-15 rssnr=0 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=2 parametersUseForLevel=1 android.telephony.CellConfigLte :{ isEndcAvailable = false }}, CellInfoLte:{mRegistered=NO mTimeStamp=179343955297078ns mCellConnectionStatus=0 CellIdentityLte:{ mCi=268435455 mPci=151 mTac=65535 mEarfcn=9485 mBands=[3] mBandwidth=2147483647 mMcc=null mMnc=null mAlphaLong= mAlphaShort= mAdditionalPlmns={} mCsgInfo=null} CellSignalStrengthLte: rssi=-85 rsrp=-103 rsrq=-17 rssnr=0 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=2 parametersUseForLevel=1 android.telephony.CellConfigLte :{ isEndcAvailable = false }}, CellInfoLte:{mRegistered=NO mTimeStamp=179343955297078ns mCellConnectionStatus=0 CellIdentityLte:{ mCi=268435455 mPci=408 mTac=65535 mEarfcn=1775 mBands=[3] mBandwidth=2147483647 mMcc=null mMnc=null mAlphaLong= mAlphaShort= mAdditionalPlmns={} mCsgInfo=null} CellSignalStrengthLte: rssi=-95 rsrp=-108 rsrq=-14 rssnr=0 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=1 parametersUseForLevel=1 android.telephony.CellConfigLte :{ isEndcAvailable = false }}, CellInfoLte:{mRegistered=NO mTimeStamp=179343955297078ns mCellConnectionStatus=0 CellIdentityLte:{ mCi=268435455 mPci=408 mTac=65535 mEarfcn=1350 mBands=[3] mBandwidth=2147483647 mMcc=null mMnc=null mAlphaLong= mAlphaShort= mAdditionalPlmns={} mCsgInfo=null} CellSignalStrengthLte: rssi=-101 rsrp=-113 rsrq=-12 rssnr=0 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=1 parametersUseForLevel=1 android.telephony.CellConfigLte :{ isEndcAvailable = false }}, CellInfoLte:{mRegistered=NO mTimeStamp=179343955297078ns mCellConnectionStatus=0 CellIdentityLte:{ mCi=268435455 mPci=151 mTac=65535 mEarfcn=1775 mBands=[3] mBandwidth=2147483647 mMcc=null mMnc=null mAlphaLong= mAlphaShort= mAdditionalPlmns={} mCsgInfo=null} CellSignalStrengthLte: rssi=-95 rsrp=-114 rsrq=-19 rssnr=0 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=1 parametersUseForLevel=1 android.telephony.CellConfigLte :{ isEndcAvailable = false }}, CellInfoLte:{mRegistered=NO mTimeStamp=179343955297078ns mCellConnectionStatus=0 CellIdentityLte:{ mCi=268435455 mPci=151 mTac=65535 mEarfcn=125 mBands=[3] mBandwidth=2147483647 mMcc=null mMnc=null mAlphaLong= mAlphaShort= mAdditionalPlmns={} mCsgInfo=null} CellSignalStrengthLte: rssi=-101 rsrp=-115 rsrq=-13 rssnr=0 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=1 parametersUseForLevel=1 android.telephony.CellConfigLte :{ isEndcAvailable = false }}, CellInfoLte:{mRegistered=NO mTimeStamp=179343955297078ns mCellConnectionStatus=0 CellIdentityLte:{ mCi=268435455 mPci=408 mTac=65535 mEarfcn=38927 mBands=[3] mBandwidth=2147483647 mMcc=null mMnc=null mAlphaLong= mAlphaShort= mAdditionalPlmns={} mCsgInfo=null} CellSignalStrengthLte: rssi=-103 rsrp=-115 rsrq=-13 rssnr=0 cqiTableIndex=2147483647 cqi=2147483647 ta=2147483647 level=1 parametersUseForLevel=1 android.telephony.CellConfigLte :{ isEndcAvailable = false }}, CellInfoLte:{mRegistered=NO mTimeStamp=179343955297078ns mCellConnectionStatus=0 CellIdentityLte:{ mCi=268435455 mPci=408 mTac=65535 mEarfcn=125 mBands=[3] mBandwidth=2147483647 mMcc=null mMnc=null mAlphaLong= mAlphaShort= mAdditionalPlmns={} mCsgInfo=null} CellSignalStrengt
+10-07 22:18:01.436  2542  3509 I TranTele/TranPhoneInterfaceManager: TTC - onCellInfoChanged
+10-07 22:18:01.450  2542  2542 D TLinkBrush_DATA: [TranSST0] checkOos -- state = 0
+10-07 22:18:01.452  2542  2542 I TranTele/TranPhoneInterfaceManager: [getPTWhiteList]
+10-07 22:18:01.452  2542  2542 I TranTele/TranPhoneInterfaceManager: [getPtPolicyforSlotIndex]
+10-07 22:18:01.468  2329  2329 D GlobalActionsDialogLite: Service changed before actions created
+10-07 22:18:01.472  2542  3509 I TranTele/TranPhoneInterfaceManager: TTC - onServiceStateChanged
+10-07 22:18:01.472  1773  3030 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1342 android.content.Context.sendBroadcastMultiplePermissions:2524 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3734 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1763 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:546 
+10-07 22:18:01.473  2542  3509 I TranTele/ReliableDetectionController: getDeviceState 1
+10-07 22:18:01.473  1773  3030 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1382 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3738 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1763 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:546 android.os.Binder.execTransactInternal:1534 
+10-07 22:18:01.475  1773  3030 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1382 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3747 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1763 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:546 android.os.Binder.execTransactInternal:1534 
+10-07 22:18:01.477  1773  3030 W ContextImpl: Calling a method in the system process without a qualified user: android.app.ContextImpl.sendBroadcastMultiplePermissions:1382 com.android.server.TelephonyRegistry.broadcastServiceStateChanged:3753 com.android.server.TelephonyRegistry.notifyServiceStateForPhoneId:1763 com.android.internal.telephony.ITelephonyRegistry$Stub.onTransact:546 android.os.Binder.execTransactInternal:1534 
+10-07 22:18:01.479  2542  3509 D TranSnifferController[0]: onServiceStateChanged: subId = 1, state = 0
+10-07 22:18:01.480  2542  3509 I TranElevatorModeForCarrierController: [isElevatorModeForCarrierDisable] disable0
+10-07 22:18:01.481  2542  3509 D TranElevatorModeForCarrierController: [onServiceStateChanged] subId:1,isDisable:false
+10-07 22:18:01.481  2542  3509 D TranElevatorModeForCarrierController: [isContains] value:51503
+10-07 22:18:01.481  2542  3509 D TranElevatorModeForCarrierController: [isContains] testPlmn:null
+10-07 22:18:01.481  2542  3509 D TranElevatorModeForCarrierController: [isContains] value:51503
+10-07 22:18:01.481  2542  3509 D TranElevatorModeForCarrierController: [isContains] testPlmn:null
+10-07 22:18:01.482  2542  3509 D UpdateCarrierConfigController: [onServiceStateChanged] mccMnc = 51503, subId = 1, serviceState = 0
+10-07 22:18:01.482  2542  3509 D UpdateCarrierConfigController: updateCarrierConfigBoolean: subId=1, ccKey=hide_rat_icon_when_wifi_bool, value=false
+10-07 22:18:01.482  2329  2329 D SysUI(260528)_CarrierText: setCarrierText: carrierText = TNT
+10-07 22:18:01.484  2542  2542 D ServiceStateProvider: subId=1
+10-07 22:18:01.484  1773  1835 I tranpm/BroadcastPolicy: isBlockHs1 true
+10-07 22:18:01.484  2542  3509 D UpdateCarrierConfigController: updateCarrierConfigBoolean: subId=1, ccKey=show_custom_lte_ca_icon, value=true
+10-07 22:18:01.484  1773  1835 I tranpm/BroadcastPolicy: limitScheduleReceiverColdLocked by hs: callingPackage = android, targetPkg = com.google.android.cellbroadcastreceiver action = android.intent.action.SERVICE_STATE
+10-07 22:18:01.486  2542  3509 D UpdateCarrierConfigController: updateCarrierConfigBoolean: subId=1, ccKey=show_custom_lte_ca_icon_plus, value=false
+10-07 22:18:01.488  2542  3509 D NetRatStallController: [onServiceStateChanged] inService = true
+10-07 22:18:01.489  2542  3509 D PingPongDetector0: onServiceStateChanged: dataRat=4G, voiceRat=4G
+10-07 22:18:01.491  2542  3509 I TranTele/TranBlindAfrPingPongController_1: [onServiceStateChanged] Not support or trueOning return.
+10-07 22:18:01.491  2542  3509 I TranTele/TranPhoneInterfaceManager: TTC - onCellLocationChanged
+10-07 22:18:01.493  2542  2542 I Telephony: TelecomAccountRegistry$TelecomAccountTelephonyCallback: onServiceStateChanged: newState=0, mServiceState=0
+10-07 22:18:01.493  2542  2542 D PhoneInterfaceManager: isRttSupported: carrier: false, device: true, mtk: false
+10-07 22:18:01.493  2542  3509 D TLinkBrush_RAT: [onCellLocationChanged] subId: 1, defaultDataId: 1
+10-07 22:18:01.493  2542  2542 I Telephony: isRttCurrentlySupported -- regular acct, hasVoiceAvailability: true
+10-07 22:18:01.493  2542  2542 I Telephony:  isRttSupported: false
+10-07 22:18:01.493  2542  2542 I Telephony:  alwaysAllowWhileRoaming: false
+10-07 22:18:01.493  2542  2542 I Telephony:  isRoaming: false
+10-07 22:18:01.493  2542  2542 I Telephony:  isOnWfc: false
+10-07 22:18:01.494  1773  3030 I Telecom-TelecomServiceImpl$1: isInEmergencyCall: false: TSI.iIEC@RSY
+10-07 22:18:01.495  2542  3509 D TLinkBrush_RAT: [handleAsyncMessage] : NETWORK_UPDATE
+10-07 22:18:01.495  2542  2542 I TranTele/TranPhoneInterfaceManager: [getPTWhiteList]
+10-07 22:18:01.495  2542  2542 I TranTele/TranPhoneInterfaceManager: [getPtPolicyforSlotIndex]
+10-07 22:18:01.495  2542  2542 I TranTele/TranPhoneInterfaceManager: [getPTWhiteList]
+10-07 22:18:01.496  2542  2542 I TranTele/TranPhoneInterfaceManager: [getPtPolicyforSlotIndex]
+10-07 22:18:01.496  2542  2542 D PhoneGlobals: mShownNotificationReasons: {},shownForThisReason: false,shownInThisNumeric: false
+10-07 22:18:01.499  2542  3509 D TLinkBrush_RAT: [onNetworkUpdate] mPreferNetworkTypeCache: 4d387
+10-07 22:18:01.500  2542  3509 D TLinkBrush_RAT: [onNetworkUpdate] networkType: 1000
+10-07 22:18:01.500  2542  3509 D TLinkBrush_RAT: [onNetworkUpdate] mNetworkTypeCache: 1000
+10-07 22:18:01.500  2542  3509 D TLinkBrush_RAT: [onNetworkUpdate] mIsType2G = false, mIsType3G = false, mIsType4G = true, mIsType5G = false
+10-07 22:18:01.501  2542  3509 D TLinkBrush_RAT: [onNetworkUpdate] mLastType4G = true, mLastType5G = false
+10-07 22:18:01.535  1773  2071 E WifiDataStall: Ignore this poll. newStats: null txLinkSpeedMbps: 135 rxLinkSpeedMbps: 1 rssi: -67 connectionCapabilities: com.android.server.wifi.WifiNative$ConnectionCapabilities@eb4ab17
+10-07 22:18:01.693  1773  1835 D BroadcastQueue: Hiber/broadcast restricted queue.uid=10285 action=BroadcastRecord{8bccd9b android.intent.action.BATTERY_CHANGED/u-1}
+10-07 22:18:01.696  1773  1835 D BroadcastQueue: Hiber/broadcast restricted queue.uid=10123 action=BroadcastRecord{8bccd9b android.intent.action.BATTERY_CHANGED/u-1}
+10-07 22:18:01.699  2542  2542 D TranSignalStrengthComponentImpl: [LTE] dbm: -109
+10-07 22:18:01.699  2542  2542 D TranSignalStrengthComponentImpl: [LTE] dbm: -109
+10-07 22:18:01.699  1773  1835 D BroadcastQueue: Hiber/broadcast restricted queue.uid=10252 action=BroadcastRecord{8bccd9b android.intent.action.BATTERY_CHANGED/u-1}
+10-07 22:18:01.700  1773  1835 D BroadcastQueue: Hiber/broadcast restricted queue.uid=10252 action=BroadcastRecord{8bccd9b android.intent.action.BATTERY_CHANGED/u-1}
+10-07 22:18:01.700  1773  1835 D BroadcastQueue: Hiber/broadcast restricted queue.uid=10252 action=BroadcastRecord{8bccd9b android.intent.action.BATTERY_CHANGED/u-1}
+10-07 22:18:01.702  1773  1835 D BroadcastQueue: Hiber/broadcast restricted queue.uid=99910252 action=BroadcastRecord{8bccd9b android.intent.action.BATTERY_CHANGED/u-1}
+10-07 22:18:01.702  1773  1843 D TranSignalStrengthComponentImpl: [LTE] dbm: -109
+10-07 22:18:01.703  1773  1835 D BroadcastQueue: Hiber/broadcast restricted queue.uid=99910252 action=BroadcastRecord{8bccd9b android.intent.action.BATTERY_CHANGED/u-1}
+10-07 22:18:01.703  1773  1835 D BroadcastQueue: Hiber/broadcast restricted queue.uid=99910252 action=BroadcastRecord{8bccd9b android.intent.action.BATTERY_CHANGED/u-1}
+10-07 22:18:01.703  2542  3509 I TranTele/TranPhoneInterfaceManager: TTC - onSignalStrengthsChanged
+10-07 22:18:01.703  7280  7388 D TranSignalStrengthComponentImpl: [LTE] dbm: -109
+10-07 22:18:01.704  1773  1835 D BroadcastQueue: Hiber/broadcast restricted queue.uid=99910252 action=BroadcastRecord{8bccd9b android.intent.action.BATTERY_CHANGED/u-1}
+10-07 22:18:01.799  1310  1474 D ULogGuard: Monitoring: 16 threads, 0 requests, 0 time-bombs; 1 guards. ResetFlags = 0x7
+10-07 22:18:01.974  1773  1801 E ApplicationHelper: Fail to get PackageManager
+10-07 22:18:01.978  1773  1801 E ApplicationHelper: Fail to get PackageManager
+10-07 22:18:01.979 30329 30396 I bt_shim_scanner: [le_scanning_manager.cc(851)] handle_remote_properties: handle_remote_properties  device_type= 3
+10-07 22:18:02.060   949   981 I libPerfCtl: xgfGetFPS pid:2329 fps:-1
+10-07 22:18:02.060   949   981 I AppThermalMode: [perfNotifyThermalState] hdl:0
+10-07 22:18:02.060   949   981 I AppThermalMode: [findAppThermalIdx] Fail: appThermalModeEnable: 0,currentFPS: -1,fg->pid:1773
+10-07 22:18:02.060   949   981 I AppThermalMode: [perfNotifyThermalState] appThermalIdx -1:
+10-07 22:18:02.209 17003 17003 I adbd    : adbd_auth: loading keys from /data/misc/adb/adb_keys
+10-07 22:18:02.439  1773  2304 I Hiber/importantScene: isTrafficActive uid:10256 speed :0
+10-07 22:18:02.439  1773  2304 I Hiber/appStateMachine: uid:10256 enter FrozenState
+10-07 22:18:02.443  1773  2304 I Hiber/stateManager: freeze uid: 10256 com.instagram.android costTime=4ms ,last unfreeze 5s ago
+10-07 22:18:02.443  1773  2304 I Hiber/restrictionPolicy: uid:10256  pkgName:com.instagram.android isAllowedNet
+10-07 22:18:02.444  1773  2307 I Hiber/nativeServiceClient: watch app network uid=10256, persistent=0
+10-07 22:18:02.444  1773  2926 D ActivityManager: Hiber/checkExecutingCmp=receiver
+10-07 22:18:02.446  1773  2926 I Hiber/stateManager: unfreeze uid: 10256 com.instagram.android pids:[7280]  reason:executingComponent   cpninfo: costTime=2ms ,last freeze 0s ago
+10-07 22:18:02.446  1773  2305 I Hiber/hiber: msg for start proxy frozen state
+10-07 22:18:02.446  1773  2305 D ActivityManager: Hiber try idle uid[10256] by hiber ,bgTime>0 ? true,isIdled before ? true ,isCurAllowListed ? false ,isProcStateBackground?true
+10-07 22:18:02.446  1773  2304 I Hiber/appStateMachine: uid=10256, pkg=com.instagram.android, transition from Frozen to Running, reason=executingComponent
+10-07 22:18:02.446  1773  2305 D ActivityManager: Hiber try idle uid[10256] by hiber
+10-07 22:18:02.446  1773  2304 I Hiber/appStateMachine: uid:10256 exit FrozenState
+10-07 22:18:02.446  1773  2305 I Hiber/proxyManager: p_service: 10256
+10-07 22:18:02.446  1773  2305 I Hiber/proxyManager: p_job: 10256 pkgName=com.instagram.android which=2
+10-07 22:18:02.447  1773  1801 E ApplicationHelper: Fail to get PackageManager
+10-07 22:18:02.457  1773  2305 D Hiber/JobExtImpl: proxyJobs leave, uid=10256, pkg=com.instagram.android which=2
+10-07 22:18:02.457  1773  2305 I Hiber/proxyManager: p_sensor: uid=10256, pkgName=com.instagram.android
+10-07 22:18:02.457  1773  2305 I Hiber/proxyManager: up_service: 10256
+10-07 22:18:02.457  1773  2305 I Hiber/proxyManager: un_job: 10256
+10-07 22:18:02.458  1773  2305 D Hiber/JobExtImpl: un_job=JobStatus{b73a652 androidx.work.systemjobscheduler:u0a256/537896 @androidx.work.systemjobscheduler@com.instagram.android/androidx.work.impl.background.systemjob.SystemJobService u=0 s=10256 TIME=+1h41m13s403ms:none NET satisfied:0x13600000 unsatisfied:0x80000000}for uid=10256
+10-07 22:18:02.458  1773  2305 D Hiber/JobExtImpl: un_job=JobStatus{8078add androidx.work.systemjobscheduler:u0a256/537895 @androidx.work.systemjobscheduler@com.instagram.android/androidx.work.impl.background.systemjob.SystemJobService u=0 s=10256 TIME=+31m56s176ms:none NET satisfied:0x13600000 unsatisfied:0x80000000}for uid=10256
+10-07 22:18:02.458  1773  2305 D Hiber/JobExtImpl: un_job=JobStatus{7461ec6 androidx.work.systemjobscheduler:u0a256/537900 @androidx.work.systemjobscheduler@com.instagram.android/androidx.work.impl.background.systemjob.SystemJobService u=0 s=10256 NET BATNOTLOW STORENOTLOW IDLE satisfied:0x13600008 unsatisfied:0x6}for uid=10256
+10-07 22:18:02.459  1773  2305 D Hiber/JobExtImpl: un_job=JobStatus{742a3c7 androidx.work.systemjobscheduler:u0a256/536146 @androidx.work.systemjobscheduler@com.instagram.android/androidx.work.impl.background.systemjob.SystemJobService u=0 s=10256 TIME=+2h10m44s217ms:none NET satisfied:0x13600000 unsatisfied:0x80000000}for uid=10256
+10-07 22:18:02.459  1773  2305 D Hiber/JobExtImpl: un_job=JobStatus{4c439b0 androidx.work.systemjobscheduler:u0a256/537899 @androidx.work.systemjobscheduler@com.instagram.android/androidx.work.impl.background.systemjob.SystemJobService u=0 s=10256 TIME=+12m34s463ms:none NET satisfied:0x13600000 unsatisfied:0x80000000}for uid=10256
+10-07 22:18:02.459  1773  2305 D Hiber/JobExtImpl: un_job=JobStatus{256fd23 androidx.work.systemjobscheduler:u0a256/537897 @androidx.work.systemjobscheduler@com.instagram.android/androidx.work.impl.background.systemjob.SystemJobService u=0 s=10256 TIME=+5h34m3s935ms:none NET satisfied:0x13600000 unsatisfied:0x80000000}for uid=10256
+10-07 22:18:02.459  1773  2305 D Hiber/JobExtImpl: unProxyJobs leave, uid=10256 discard=false
+10-07 22:18:02.460  1773  2305 D Hiber/alarmManagerServiceExtImpl: unproxyAlarms leave, uid=10256, packageName=null
+10-07 22:18:02.460  1773  2305 I Hiber/proxyManager: up_sensor: uid=10256, pkgName=com.instagram.android
+10-07 22:18:02.653  1773  2078 I TranWifiSmartAssistantController: start current network monitor 
+10-07 22:18:02.654  1773  2078 I TranWifiSmartAssistantController: userIgnored :false isScoredCurrentNetwork :true
+10-07 22:18:02.654  1773  2078 I TranWifiSmartAssistantController: mCurrentNetwork :175 SSID :"PLDTHOMEFIBRuE2XA"
+10-07 22:18:02.656  1773  2078 I WifiNetworkQuality: current rssi is sufficient
+10-07 22:18:02.656  1773  2078 I TranWifiSmartAssistantController: mNoCandidateCount : 17
+10-07 22:18:02.656  1773  2078 I TranWifiSmartAssistantController: ====>>rssi :-67
+10-07 22:18:02.986  1773  1801 E ApplicationHelper: Fail to get PackageManager
+10-07 22:18:02.991  1773  1801 E ApplicationHelper: Fail to get PackageManager
+10-07 22:18:03.060   949   981 I libPerfCtl: xgfGetFPS pid:2329 fps:-1
+10-07 22:18:03.060   949   981 I AppThermalMode: [perfNotifyThermalState] hdl:0
+10-07 22:18:03.060   949   981 I AppThermalMode: [findAppThermalIdx] Fail: appThermalModeEnable: 0,currentFPS: -1,fg->pid:1773
+10-07 22:18:03.060   949   981 I AppThermalMode: [perfNotifyThermalState] appThermalIdx -1:
+10-07 22:18:03.271 30329 30396 I bt_shim_scanner: [le_scanning_manager.cc(851)] handle_remote_properties: handle_remote_properties  device_type= 3
+10-07 22:18:03.271 30329 30374 I bt_btif_dm: btif_dm.cc:533 get_cod: remote_cod=0x007a020c
+10-07 22:18:03.273  1773  2284 I tranpm/NormalReclaimer: memAvailable : 1421884
+10-07 22:18:03.275  1773  2284 I tranpm/NormalReclaimer: doReclaim gap: 523716
+10-07 22:18:03.276  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.276  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.279  1773  2284 I tranpm/AppPurner:  kill info -- AppPruner: Reclaimed 0KB while requirement is 523716KB effective:false
+10-07 22:18:03.279  1773  2284 I tranpm/NormalReclaimer: prunerReclaimSizeKb=0
+10-07 22:18:03.279  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.297  1773  2284 I tranpm/CommonReclaim-recentReclaim: Final candidate bg apps size 0 while expect size 12,isCritical:false
+10-07 22:18:03.298  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.301  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.301  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.304  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.304  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.306  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.307  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.308  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.310  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.311  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.312  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.314  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.314  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.316  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.316  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.318  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.319  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.321  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.322  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.323  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.324  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.325  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.326  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.327  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.328  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.329  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.330  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.331  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.332  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.334  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.334  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.336  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.336  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.338  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.339  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.340  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.341  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.342  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.343  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.345  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.346  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.347  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.349  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.350  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=10
+10-07 22:18:03.351  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.352  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.354  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.355  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.356  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.357  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.358 30329 30396 I bt_shim_scanner: [le_scanning_manager.cc(851)] handle_remote_properties: handle_remote_properties  device_type= 3
+10-07 22:18:03.358  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.359  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.360  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.361  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.362  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.363  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.364  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.365  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.366  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.367  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.368  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.369  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.371  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.371  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.373  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.375  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.376  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=10
+10-07 22:18:03.377  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.379  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.380  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.381  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.382  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=10
+10-07 22:18:03.382  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.384  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=10
+10-07 22:18:03.384  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.386  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=10
+10-07 22:18:03.386  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.388  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=10
+10-07 22:18:03.389  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.390  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.391  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.392  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=10
+10-07 22:18:03.392  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.394  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.395  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.396  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.398  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=17
+10-07 22:18:03.399  1773  2284 D aegean_TranRecentTasksProxy: FW_getTasks=5
+10-07 22:18:03.399  1773  2284 I tranpm/CommonReclaim-ProcessReclaimer: kill info -- processReclaim:  request: 523716 releaseSize: 0 killTaskCount: 0 exemptCount： 45 effective: false
+10-07 22:18:03.617  1773  2076 D TranWifiTputMonitor: WIFI: TX: 0 RX: 0 TOTAL = 0
+10-07 22:18:03.618  1773  2076 D TranWifiTputMonitor: High Tput: false, TOTAL TPUT: 0
+10-07 22:18:03.696  2488 31621 D IpClient/wlan0: interfaceLinkStateChanged: ifindex 37 up
+10-07 22:18:03.998  1773  1801 E ApplicationHelper: Fail to get PackageManager
+10-07 22:18:04.004  1773  1801 E ApplicationHelper: Fail to get PackageManager
+10-07 22:18:04.060   949   981 I libPerfCtl: xgfGetFPS pid:2329 fps:-1
+10-07 22:18:04.060   949   981 I AppThermalMode: [perfNotifyThermalState] hdl:0
+10-07 22:18:04.060   949   981 I AppThermalMode: [findAppThermalIdx] Fail: appThermalModeEnable: 0,currentFPS: -1,fg->pid:1773
+10-07 22:18:04.060   949   981 I AppThermalMode: [perfNotifyThermalState] appThermalIdx -1:
+10-07 22:18:04.507   999   999 I BufferQueueProducer: [StatusBar#108](this:0xb4000075b7753ef8,id:-1,api:0,p:-1,c:999) queueBuffer: fps=0.30 dur=3289.06 max=3289.06 min=3289.06
+10-07 22:18:04.514   949   965 I mtkpower@impl: [setMode] type:6, enabled:1
+10-07 22:18:04.514   949   965 E mtkpower@impl: [setMode] unknown type
+10-07 22:18:04.524   999   999 I BufferQueueProducer: [FramebufferSurface](this:0xb4000076d7557d00,id:-1,api:1,p:999,c:999) queueBuffer: fps=0.30 dur=3290.44 max=3290.44 min=3290.44
+10-07 22:18:04.524   926   926 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:0.303915,dur:3290.39,max:3290.39,min:3290.39  
+10-07 22:18:04.551  1773  2071 E WifiDataStall: Ignore this poll. newStats: null txLinkSpeedMbps: 135 rxLinkSpeedMbps: 1 rssi: -66 connectionCapabilities: com.android.server.wifi.WifiNative$ConnectionCapabilities@eb4ab17
+10-07 22:18:04.577   949   965 I mtkpower@impl: [setMode] type:6, enabled:0
+10-07 22:18:04.577   949   965 E mtkpower@impl: [setMode] unknown type
+10-07 22:18:04.802  1310  1474 D ULogGuard: Monitoring: 16 threads, 0 requests, 0 time-bombs; 1 guards. ResetFlags = 0x7
+10-07 22:18:04.899  2542  2542 D TranSignalStrengthComponentImpl: [LTE] dbm: -113
+10-07 22:18:04.900  2542  2542 D TranSignalStrengthComponentImpl: [LTE] dbm: -113
+10-07 22:18:04.903  2542  3509 I TranTele/TranPhoneInterfaceManager: TTC - onSignalStrengthsChanged
+10-07 22:18:04.905  1773  1843 D TranSignalStrengthComponentImpl: [LTE] dbm: -113
+10-07 22:18:04.905  7280  7388 D TranSignalStrengthComponentImpl: [LTE] dbm: -113
+10-07 22:18:05.010  1773  1801 E ApplicationHelper: Fail to get PackageManager
+10-07 22:18:05.016  1773  1801 E ApplicationHelper: Fail to get PackageManager
+10-07 22:18:05.060   949   981 I libPerfCtl: xgfGetFPS pid:2329 fps:-1
+10-07 22:18:05.061   949   981 I AppThermalMode: [perfNotifyThermalState] hdl:0
+10-07 22:18:05.061   949   981 I AppThermalMode: [findAppThermalIdx] Fail: appThermalModeEnable: 0,currentFPS: -1,fg->pid:1773
+10-07 22:18:05.061   949   981 I AppThermalMode: [perfNotifyThermalState] appThermalIdx -1:
+10-07 22:18:05.196 17003 17003 I adbd    : adbd service requested 'shell,v2:export ANDROID_LOG_TAGS=''; exec logcat '-d' '-t' '500''

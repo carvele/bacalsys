@@ -6,6 +6,7 @@ import {
   formatActual,
   formatTarget,
   isMedicalReason,
+  replaySetKey,
   setBadge,
   substitutionFor,
   substitutionReasonLabel,
@@ -59,7 +60,7 @@ export function SessionReplayTable({ replay }: { replay: SessionReplay }) {
               {item.sets.map((set) => {
                 const badge = setBadge(set, replay.session.status);
                 return (
-                  <View key={`${item.workoutItemId}-${set.setNumber}`} className="flex-row items-center gap-2 rounded-control bg-surface-sunken px-2 py-1.5">
+                  <View key={replaySetKey(item.workoutItemId, set)} className="flex-row items-center gap-2 rounded-control bg-surface-sunken px-2 py-1.5">
                     <Text className="w-8 text-sm text-ink">{set.setNumber}</Text>
                     <Text className="flex-1 text-sm text-ink-muted">{formatTarget(set)}</Text>
                     <Text className="flex-1 text-sm text-ink">{formatActual(set)}</Text>
