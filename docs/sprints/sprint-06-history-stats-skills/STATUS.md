@@ -1,17 +1,14 @@
 # Sprint 6: Training History, Statistics & Calisthenics Skills — engineering status
 
-> **Status: Reviewer round 2 closure — Ready for Final Reviewer Gate (2026-10-07).**
-> Item 22 (**F-S6-P10** / blocking findings **F-S6-R01**, **F-S6-R02**) is **100% executed and evidenced** on a physical Android
-> device (Infinix X6880, Android 14) via USB debugging: 6 canonical UI flow screenshots + clean app-filtered logcat in
-> `docs/sprints/sprint-06-history-stats-skills/evidence/`. Finding **F-S6-E07** (duplicate React key on extra sets)
-> was diagnosed, fixed in `SessionReplayTable.tsx` / `replay.ts`, regression-tested, and re-verified on device with zero LogBox warnings.
-> Hosted migration history was reconciled to match Git 1:1 (`20260929000008` canonical, orphan `20260929140215` removed) with composite FK index intact.
-> Hosted smoke suites Sprints 1–6 re-run and passing 100%.
-> **Do not tag `sprint-06-accepted`** until the Reviewer's formal PASS verdict is relayed by the product owner.
+> **Status: ACCEPTED — FROZEN (2026-10-07).**
+> Reviewer verdict relayed by the product owner: **PASS — ACCEPTED / FROZEN**.
+> Sprint 6 is officially closed and frozen. Tag `sprint-06-accepted` applied.
+> All blocking findings (F-S6-R01, F-S6-R02) closed with verified evidence; clean Android physical smoke test,
+> process-filtered logcat, zero LogBox warnings, and hosted migration history reconciled 1:1.
 >
 > **Baseline:** `sprint-05-accepted` (commit `f87d807`). Roadmap v1.2 Section 13, Tasks 6.0–6.16, implemented from
 > the Planner's dispatch as frozen, with findings (§5): Bugs found and fixed (F-S6-E02, E03, E04, E05, E07),
-> and the Android & migration verification gaps (F-S6-E06 / F-S6-R01 / F-S6-R02) fully closed (§9, §10).
+> and the Android & migration verification gaps (F-S6-E06 / F-S6-R01 / F-S6-R02) fully closed (§9, §10, §11).
 
 - **Environment:**
   - Hosted dev project `bacalsys-dev` (`sfptojkkmjggssqzyseo`), PostgreSQL **17.6**.
@@ -223,7 +220,7 @@ in §9 below.
 **Overall verification:**
 - `npm run verify`: Typecheck 0 errors; lint 0 errors; Jest 20 suites / 203 tests passed; Node script tests 2 suites / 9 tests passed; offline pgTAP 17 files / 770 assertions passed.
 - Item 22 is marked **COMPLETE (✅)** in [ACCEPTANCE.md](ACCEPTANCE.md).
-- Item 38 remains **Pending Reviewer Gate**: `sprint-06-accepted` git tag will be applied only after the Reviewer's formal PASS verdict is relayed.
+- Item 38 is marked **COMPLETE (✅)**: `sprint-06-accepted` git tag created and pushed following product owner relay of ChatGPT Reviewer PASS verdict.
 
 ## 10. Round 2 Reviewer Gate: targeted closure (F-S6-R02)
 
@@ -239,5 +236,16 @@ The Reviewer independently verified Round 2 (CI run 37639881013 on commit `6af3c
   Filtered logcat strictly by app PID (`12263`): `adb logcat --pid=12263 -d`. Crash buffer verified empty (`adb logcat -b crash -d` -> 0 crashes). Saved to `docs/sprints/sprint-06-history-stats-skills/evidence/android-smoke.log`.
 - **Hosted Supabase migration history reconciliation:**
   Reconciled remote-only `20260929140215` in `supabase_migrations.schema_migrations` on hosted `sfptojkkmjggssqzyseo`. Canonical `20260929000008` is now the top migration, matching Git 1:1. Composite index `athlete_skill_status_skill_progression_idx` remains intact and valid.
+
+## 11. Final Reviewer Gate & Freeze
+
+On 2026-10-07, the product owner relayed the Reviewer's formal gate verdict:
+**PASS — ACCEPTED / FROZEN**.
+- **F-S6-R02 Android closure verified PASS:** zero LogBox notifications, clean extra/skipped set render, process-filtered PID 12263 logcat, clean crash buffer.
+- **Migration reconciliation verified PASS:** `20260929000008` canonical, orphan `20260929140215` removed, composite index present and valid, performance advisor clean.
+- **Repository & CI verified PASS:** 100% green across all suites (Jest 203/203, Node 9/9, pgTAP 770/770, typecheck 0, lint 0).
+- Tag `sprint-06-accepted` created and pushed.
+- **Sprint 6 is officially closed and frozen.**
+
 
 

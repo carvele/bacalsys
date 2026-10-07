@@ -1,13 +1,6 @@
 # Sprint 6: Acceptance Checklist
 
-> **Status: Reviewer round 2 closure — Ready for Final Reviewer Gate (2026-10-07).**
-> Item 22 (**F-S6-P10** / blocking findings **F-S6-R01**, **F-S6-R02**) is **100% executed and evidenced** on a physical Android
-> device (Infinix X6880, Android 14) via USB debugging: 6 canonical UI flow screenshots + clean app-filtered logcat in
-> `docs/sprints/sprint-06-history-stats-skills/evidence/`. Finding **F-S6-E07** (duplicate React key on extra sets)
-> was diagnosed, fixed in `SessionReplayTable.tsx` / `replay.ts`, regression-tested, and re-verified on device with zero LogBox warnings.
-> Hosted migration history was reconciled to match Git 1:1 (`20260929000008` canonical, orphan `20260929140215` removed) with composite FK index intact.
-> Hosted smoke suites Sprints 1–6 re-run and passing 100%.
-> **Do not tag `sprint-06-accepted`** until the Reviewer's formal PASS verdict is relayed by the product owner.
+> **Status: ACCEPTED — FROZEN (2026-10-07).** Reviewer verdict relayed by the product owner ("Sprint 6 Final Reviewer Gate: PASS — ACCEPTED / FROZEN"); tag `sprint-06-accepted` applied. All blocking findings (F-S6-R01, F-S6-R02) closed with evidence; Android physical smoke test verified clean with no LogBox notifications and process-filtered logcat; hosted migration history reconciled 1:1 with Git. Antigravity did not self-approve.
 
 An item is checked only with the evidence beside it. Detail is in [STATUS.md](STATUS.md). pgTAP assertion numbers
 refer to `016_training_history_and_statistics.test.sql` (49 total) and `017_skills_and_progressions.test.sql`
@@ -52,7 +45,7 @@ refer to `016_training_history_and_statistics.test.sql` (49 total) and `017_skil
 | 35 | Hosted fixture cleanup | ⚠️ Not executed | Four Sprint 6 fixtures remain on `bacalsys-dev`; the product owner's call, same convention as Sprints 2–5 |
 | 36 | Reviewer round 1 verdict recorded | ✅ | **FAIL, targeted closure required** (2026-09-29), relayed by the product owner. Blocking: F-S6-R01 (item 22). Non-blocking: item 30/37. F-S6-E02–E05 accepted as implementation, no ADR |
 | 37 | **F-S6-R01 round-2 fix** — composite index for `fk_athlete_skill_status_progression` (Reviewer's non-blocking `get_advisors(performance)` finding) | ✅ | `20260929000008_athlete_skill_status_fk_index.sql`, applied to the offline harness and `bacalsys-dev`; `get_advisors(performance)` no longer lists `unindexed_foreign_keys` for this table; pgTAP unchanged at 17/770; typecheck 0, lint 0 (STATUS §8) |
-| 38 | Tag Sprint 6 as accepted | ⏳ **Pending Reviewer Gate** | Item 22 evidenced and closed; awaiting product owner relay of ChatGPT Reviewer PASS verdict |
+| 38 | Tag Sprint 6 as accepted | ✅ | Reviewer verdict **PASS — ACCEPTED / FROZEN** relayed by the product owner; annotated git tag `sprint-06-accepted` applied |
 
 ## Notes
 
